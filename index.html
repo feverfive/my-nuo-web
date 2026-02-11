@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>傩舞声浪 — Nuo Dance Resonance</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;700&display=swap');
+:root{--gold:#c9a84c;--red:#b22222;--dark:#0a0808;--ink:#1a1210}
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#0a0808;font-family:'Noto Serif SC',serif;color:#c0b090;user-select:none}
+canvas{position:fixed;inset:0;width:100%;height:100%}
+#bgC{z-index:1}#ptC{z-index:2}#fxC{z-index:3;pointer-events:none}#glC{z-index:4;pointer-events:none}
+#maskWrap{position:fixed;z-index:2;left:50%;top:40%;transform:translate(-50%,-50%);width:min(55vh,55vw);height:min(68vh,68vw);transition:transform .08s}
+#maskWrap svg{width:100%;height:100%;filter:drop-shadow(0 0 25px rgba(180,40,40,.3))}
+#overlay{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse,rgba(15,10,8,.97),rgba(8,5,4,.99));transition:opacity .8s,visibility .8s}
+#overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
+#overlay h1{font-family:'Ma Shan Zheng',cursive;font-size:clamp(2.5rem,7vw,4.5rem);color:var(--gold);text-shadow:0 0 40px rgba(200,160,60,.4);letter-spacing:.3em;margin-bottom:.15em}
+#overlay p{font-size:.8rem;color:#665540;letter-spacing:.2em;margin-bottom:1.8em}
+.token-btn{position:relative;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,#8b6914,#5a4210 60%,#3a2a08);border:3px solid var(--gold);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;box-shadow:0 0 20px rgba(200,160,60,.2),inset 0 0 30px rgba(0,0,0,.5);transition:all .3s}
+.token-btn:hover{box-shadow:0 0 40px rgba(200,160,60,.5);transform:scale(1.05)}
+.token-btn::before{content:'';position:absolute;inset:6px;border-radius:50%;border:1px solid rgba(200,160,60,.3)}
+.token-btn span{font-family:'Ma Shan Zheng',cursive;font-size:1rem;color:var(--gold)}
+.token-btn small{font-size:.55rem;color:#8b7740;margin-top:2px}
+input[type=file]{display:none}
+#hud{position:fixed;bottom:0;left:0;right:0;z-index:50;display:none;flex-direction:column}
+#hud.visible{display:flex}
+#specC{width:100%;height:28px;opacity:.5}
+.player-bar{background:rgba(10,8,6,.9);border-top:1px solid rgba(200,160,60,.1);padding:0 16px}
+.progress-row{display:flex;align-items:center;gap:8px;padding:5px 0 2px}
+.time-label{font-size:.6rem;color:#8b7740;min-width:35px;text-align:center;font-variant-numeric:tabular-nums}
+.progress-track{flex:1;height:5px;background:rgba(40,30,20,.8);border-radius:3px;cursor:pointer;border:1px solid rgba(200,160,60,.08)}
+.progress-fill{height:100%;background:linear-gradient(90deg,#8b6914,#c9a84c);border-radius:3px;width:0%;position:relative}
+.progress-fill::after{content:'';position:absolute;right:-5px;top:-3px;width:10px;height:10px;border-radius:50%;background:radial-gradient(circle,#e8c368,#8b6914);border:1px solid var(--gold);opacity:0;transition:opacity .2s}
+.progress-track:hover .progress-fill::after{opacity:1}
+.ctrl-row{display:flex;align-items:center;gap:6px;padding:4px 0 6px;justify-content:center;flex-wrap:wrap}
+.cb{background:none;border:1px solid rgba(200,160,60,.25);color:var(--gold);font-family:'Noto Serif SC',serif;font-size:.6rem;padding:2px 8px;cursor:pointer;transition:all .2s;border-radius:2px;white-space:nowrap}
+.cb:hover{background:rgba(200,160,60,.1);box-shadow:0 0 10px rgba(200,160,60,.15)}
+.cb.active{background:rgba(200,160,60,.15);border-color:var(--gold)}
+.pb{width:28px;height:28px;border-radius:50%;background:radial-gradient(circle,#6b5210,#3a2a08);border:1.5px solid rgba(200,160,60,.4);color:var(--gold);font-size:.8rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;padding:0}
+.pb:hover{box-shadow:0 0 12px rgba(200,160,60,.3)}
+.pb.main{width:32px;height:32px;font-size:.95rem;border-width:2px}
+.vg{display:flex;align-items:center;gap:3px}
+.vs{-webkit-appearance:none;appearance:none;width:50px;height:3px;background:rgba(40,30,20,.8);border-radius:2px;outline:none}
+.vs::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:var(--gold);cursor:pointer}
+#trackName{font-size:.55rem;color:#665540;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sep{width:1px;height:14px;background:rgba(200,160,60,.1)}
+
+/* Lyrics */
+#lyricsWrap{position:fixed;z-index:10;bottom:100px;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none;width:80%;max-width:600px}
+#lyricsWrap .line{font-family:'Ma Shan Zheng',cursive;font-size:1.2rem;color:rgba(200,180,140,.2);transition:all .4s;line-height:2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.5}
+#lyricsWrap .line.active{color:var(--gold);text-shadow:0 0 20px rgba(200,160,60,.5);font-size:1.7rem;opacity:1}
+#lyricsWrap .line.prev{color:rgba(200,180,140,.12);font-size:1rem;opacity:.35}
+#lyricsWrap .line.next{color:rgba(200,180,140,.25);font-size:1.1rem;opacity:.5}
+
+/* Custom mask upload zone */
+#uploadZone{display:none;position:fixed;z-index:90;left:50%;top:50%;transform:translate(-50%,-50%);width:min(65vw,500px);height:min(50vh,400px);border:2px dashed rgba(200,160,60,.35);border-radius:12px;background:rgba(10,8,6,.95);backdrop-filter:blur(12px);cursor:pointer;transition:all .3s;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+#uploadZone.visible{display:flex}
+#uploadZone:hover,#uploadZone.dragover{border-color:var(--gold);box-shadow:0 0 40px rgba(200,160,60,.15);background:rgba(15,12,8,.97)}
+#uploadZone .uz-icon{font-size:3.5rem;color:rgba(200,160,60,.3);line-height:1}
+#uploadZone .uz-title{font-family:'Ma Shan Zheng',cursive;font-size:1.4rem;color:var(--gold);letter-spacing:.15em}
+#uploadZone .uz-hint{font-size:.7rem;color:#665540;letter-spacing:.1em}
+#uploadZone .uz-preview{max-width:85%;max-height:65%;object-fit:contain;border-radius:6px;display:none;border:1px solid rgba(200,160,60,.15)}
+#uploadZone .uz-close{position:absolute;top:10px;right:14px;font-size:1.2rem;color:#665540;cursor:pointer;background:none;border:none;font-family:serif}
+#uploadZone .uz-close:hover{color:var(--gold)}
+
+/* Recording indicator */
+#recDot{position:fixed;top:14px;left:14px;z-index:200;display:none;align-items:center;gap:6px;padding:4px 10px;background:rgba(10,5,5,.8);border:1px solid rgba(255,50,50,.3);border-radius:12px}
+#recDot.visible{display:flex}
+#recDot .dot{width:10px;height:10px;border-radius:50%;background:#e33;animation:recBlink 1s infinite}
+#recDot .rlabel{font-size:.6rem;color:#e88;letter-spacing:.1em}
+@keyframes recBlink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Recording preview modal */
+#recPreview{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;background:rgba(5,3,2,.92);backdrop-filter:blur(8px)}
+#recPreview.visible{display:flex}
+#recPreview .rp-box{background:rgba(15,12,10,.98);border:1px solid rgba(200,160,60,.2);border-radius:8px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:14px;max-width:80vw}
+#recPreview video{max-width:70vw;max-height:55vh;border-radius:6px;border:1px solid rgba(200,160,60,.1)}
+#recPreview .rp-btns{display:flex;gap:12px}
+#recPreview .rp-btn{font-family:'Noto Serif SC',serif;font-size:.75rem;padding:6px 20px;border:1px solid rgba(200,160,60,.3);color:var(--gold);background:rgba(200,160,60,.08);border-radius:4px;cursor:pointer;transition:all .2s}
+#recPreview .rp-btn:hover{background:rgba(200,160,60,.15);box-shadow:0 0 12px rgba(200,160,60,.2)}
+
+/* Camera preview */
+#camWrap{position:fixed;bottom:90px;right:12px;z-index:70;width:160px;height:120px;border-radius:6px;overflow:hidden;border:1px solid rgba(200,160,60,.2);background:#000;display:none}
+#camWrap.visible{display:block}
+#camVideo{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+#camWrap .cam-label{position:absolute;top:4px;left:6px;font-size:.5rem;color:var(--gold);opacity:.6;letter-spacing:.08em}
+#camWrap .cam-close{position:absolute;top:2px;right:5px;font-size:.9rem;color:#665540;cursor:pointer;background:none;border:none}
+#gestureHint{position:fixed;top:50px;left:50%;transform:translateX(-50%);z-index:80;font-family:'Ma Shan Zheng',cursive;font-size:1.2rem;color:var(--gold);text-shadow:0 0 15px rgba(200,160,60,.5);opacity:0;transition:opacity .4s;pointer-events:none}
+#gestureHint.show{opacity:1}
+
+/* Gesture sensitivity slider */
+#gesturePanel{position:fixed;top:8px;left:8px;z-index:60;display:none;flex-direction:column;gap:4px;background:rgba(10,8,6,.9);border:1px solid rgba(200,160,60,.12);border-radius:3px;padding:6px 10px;backdrop-filter:blur(8px)}
+#gesturePanel.visible{display:flex}
+#gesturePanel .gp-title{font-family:'Ma Shan Zheng',cursive;font-size:.7rem;color:var(--gold)}
+#gesturePanel .gp-row{display:flex;align-items:center;justify-content:space-between;gap:6px}
+#gesturePanel .gp-row label{font-size:.5rem;color:#998860}
+
+/* FX Panel */
+#fxPanel{position:fixed;top:8px;right:8px;z-index:60;width:170px;background:rgba(10,8,6,.92);border:1px solid rgba(200,160,60,.12);border-radius:3px;backdrop-filter:blur(8px);display:none;flex-direction:column;overflow:hidden;max-height:80vh;overflow-y:auto}
+#fxPanel.visible{display:flex}
+#fxPanel::-webkit-scrollbar{width:3px}
+#fxPanel::-webkit-scrollbar-thumb{background:rgba(200,160,60,.2);border-radius:2px}
+.fxH{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-bottom:1px solid rgba(200,160,60,.08);cursor:pointer}
+.fxH span{font-family:'Ma Shan Zheng',cursive;font-size:.8rem;color:var(--gold)}
+.fxB{padding:5px 8px;display:flex;flex-direction:column;gap:4px}
+.fxR{display:flex;align-items:center;justify-content:space-between}
+.fxR label{font-size:.55rem;color:#998860}
+.ft{width:28px;height:14px;border-radius:7px;background:rgba(40,30,20,.8);border:1px solid rgba(200,160,60,.15);cursor:pointer;position:relative;-webkit-appearance:none;appearance:none;outline:none}
+.ft:checked{background:rgba(200,160,60,.2);border-color:var(--gold)}
+.ft::after{content:'';position:absolute;top:1px;left:1px;width:10px;height:10px;border-radius:50%;background:#665540;transition:all .2s}
+.ft:checked::after{left:15px;background:var(--gold)}
+.fs{-webkit-appearance:none;appearance:none;width:100%;height:3px;background:rgba(40,30,20,.8);border-radius:2px;outline:none;margin:2px 0}
+.fs::-webkit-slider-thumb{-webkit-appearance:none;width:9px;height:9px;border-radius:50%;background:var(--gold);cursor:pointer}
+.fxD{height:1px;background:rgba(200,160,60,.06);margin:1px 0}
+.fxSec{font-size:.5rem;color:#665540;padding:2px 0;letter-spacing:.1em}
+/* Mode selector */
+#modeBar{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:55;display:none;gap:4px;background:rgba(10,8,6,.85);border:1px solid rgba(200,160,60,.1);border-radius:3px;padding:4px 8px}
+#modeBar.visible{display:flex}
+.mode-btn{font-family:'Ma Shan Zheng',cursive;font-size:.75rem;color:#665540;background:none;border:1px solid transparent;padding:2px 10px;cursor:pointer;border-radius:2px;transition:all .2s;white-space:nowrap}
+.mode-btn.active{color:var(--gold);border-color:rgba(200,160,60,.3);text-shadow:0 0 8px rgba(200,160,60,.3)}
+.mode-btn:hover{color:#998860}
+</style>
+</head>
+<body>
+<canvas id="bgC"></canvas>
+<canvas id="ptC"></canvas>
+<div id="maskWrap"></div>
+<canvas id="fxC"></canvas>
+<canvas id="glC"></canvas>
+<div id="lyricsWrap"></div>
+
+<div id="overlay">
+  <h1>傩舞声浪</h1>
+  <p>NUO DANCE RESONANCE</p>
+  <div class="token-btn" onclick="$('fileIn').click()"><span>奏乐</span><small>UPLOAD MP3</small></div>
+  <input type="file" id="fileIn" accept="audio/*">
+</div>
+
+<div id="uploadZone">
+  <button class="uz-close" onclick="$('uploadZone').classList.remove('visible')">&times;</button>
+  <div class="uz-icon">&#128126;</div>
+  <div class="uz-title">拖拽面具图片到此处</div>
+  <div class="uz-hint">或点击选择文件 · 支持 PNG / JPG / SVG</div>
+  <img class="uz-preview" id="uzPreview">
+  <input type="file" id="maskIn" accept="image/*" style="display:none">
+</div>
+
+<div id="camWrap">
+  <span class="cam-label">手势识别</span>
+  <button class="cam-close" onclick="$('camWrap').classList.remove('visible')">&times;</button>
+  <video id="camVideo" autoplay playsinline muted></video>
+</div>
+
+<div id="gestureHint"></div>
+
+<div id="gesturePanel">
+  <div class="gp-title">手势设置</div>
+  <div class="gp-row"><label>灵敏度</label><input type="range" class="fs" id="gestSens" min="1" max="10" value="5" style="width:80px"></div>
+  <div class="gp-row" style="font-size:.45rem;color:#665540">掌开=爆发 握拳=收缩 双手=全屏 左右=换面 上下=换模式 远近=强度 合十=祈祷</div>
+</div>
+
+<div id="recDot"><div class="dot"></div><span class="rlabel">REC</span></div>
+
+<div id="recPreview">
+  <div class="rp-box">
+    <video id="rpVideo" controls></video>
+    <div class="rp-btns">
+      <button class="rp-btn" id="rpDownload">下载录制</button>
+      <button class="rp-btn" id="rpClose">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div id="modeBar">
+  <button class="mode-btn active" data-m="0">神启</button>
+  <button class="mode-btn" data-m="1">法力</button>
+  <button class="mode-btn" data-m="2">水墨</button>
+  <button class="mode-btn" data-m="3">梦境</button>
+  <button class="mode-btn" data-m="4">通灵</button>
+</div>
+
+<div id="fxPanel">
+  <div class="fxH" onclick="$('fxBody').style.display=$('fxBody').style.display==='none'?'':'none'"><span>特效控制</span><small style="color:#665540">▼</small></div>
+  <div class="fxB" id="fxBody">
+    <div class="fxSec">— 粒子 —</div>
+    <div class="fxR"><label>粒子跳动</label><input type="checkbox" class="ft" id="fxPt" checked></div>
+    <div class="fxR"><label>拖尾残影</label><input type="checkbox" class="ft" id="fxTr" checked></div>
+    <div class="fxR"><label>边缘燃烧</label><input type="checkbox" class="ft" id="fxBn" checked></div>
+    <div class="fxD"></div>
+    <div class="fxSec">— 故障 —</div>
+    <div class="fxR"><label>RGB错位</label><input type="checkbox" class="ft" id="fxRgb" checked></div>
+    <div class="fxR"><label>画面撕裂</label><input type="checkbox" class="ft" id="fxTe" checked></div>
+    <div class="fxR"><label>扫描噪点</label><input type="checkbox" class="ft" id="fxNs" checked></div>
+    <div class="fxR"><label>负片闪烁</label><input type="checkbox" class="ft" id="fxIv" checked></div>
+    <div class="fxD"></div>
+    <div class="fxSec">— 声浪 —</div>
+    <div class="fxR"><label>光环波纹</label><input type="checkbox" class="ft" id="fxRp" checked></div>
+    <div class="fxR"><label>频率山脉</label><input type="checkbox" class="ft" id="fxFm" checked></div>
+    <div class="fxR"><label>火焰粒子</label><input type="checkbox" class="ft" id="fxFi" checked></div>
+    <div class="fxR"><label>金色闪电</label><input type="checkbox" class="ft" id="fxLt" checked></div>
+    <div class="fxR"><label>符文光环</label><input type="checkbox" class="ft" id="fxRn" checked></div>
+    <div class="fxR"><label>声波丝带</label><input type="checkbox" class="ft" id="fxRb" checked></div>
+    <div class="fxR"><label>水面倒影</label><input type="checkbox" class="ft" id="fxWt" checked></div>
+    <div class="fxR"><label>星尘飘散</label><input type="checkbox" class="ft" id="fxSd" checked></div>
+    <div class="fxR"><label>云纹漩涡</label><input type="checkbox" class="ft" id="fxCl" checked></div>
+    <div class="fxD"></div>
+    <div class="fxSec">— 强度 —</div>
+    <input type="range" class="fs" id="fxGA" min="0" max="100" value="50">
+  </div>
+</div>
+
+<div id="hud">
+  <canvas id="specC"></canvas>
+  <div class="player-bar">
+    <div class="progress-row">
+      <span class="time-label" id="tCur">0:00</span>
+      <div class="progress-track" id="pTrk"><div class="progress-fill" id="pFill"></div></div>
+      <span class="time-label" id="tTot">0:00</span>
+    </div>
+    <div class="ctrl-row">
+      <span id="trackName">—</span><div class="sep"></div>
+      <button class="pb" id="bRew">⏪</button>
+      <button class="pb main" id="bPlay">▶</button>
+      <button class="pb" id="bFwd">⏩</button><div class="sep"></div>
+      <div class="vg"><button class="pb" id="bMut">🔊</button><input type="range" class="vs" id="vSldr" min="0" max="1" step=".01" value="1"></div><div class="sep"></div>
+      <button class="cb" onclick="$('fileIn').click()">换曲</button>
+      <button class="cb" id="bMask">换面</button>
+      <button class="cb" id="bCustom">自定</button>
+      <button class="cb" onclick="$('lrcIn').click()">歌词</button>
+      <input type="file" id="lrcIn" accept=".lrc,.txt">
+      <button class="cb" id="bFx">特效</button>
+      <button class="cb" id="bExport">截图</button>
+      <button class="cb" id="bRec">录制</button>
+      <button class="cb" id="bGest">手势</button>
+      <button class="cb" id="bFS">全屏</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+// ═══════════════════════════════════════
+// MASKS — 5 traditional Nuo masks (no nostrils, flat-style noses)
+// ═══════════════════════════════════════
+const MASKS=[
+// 0: 判官 Judge — red, double horns
+`<svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="f0" cx="50%" cy="45%" r="50%"><stop offset="0%" stop-color="#cc3333"/><stop offset="100%" stop-color="#5a0f0f"/></radialGradient><filter id="g0"><feGaussianBlur stdDeviation="3" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g class="mask-horns"><path d="M120,140Q90,60 60,20Q80,80 85,130Z" fill="#2a2015" stroke="#c9a84c" stroke-width="1.5"/><path d="M280,140Q310,60 340,20Q320,80 315,130Z" fill="#2a2015" stroke="#c9a84c" stroke-width="1.5"/></g><path d="M100,160Q130,120 200,110Q270,120 300,160L310,170Q270,135 200,125Q130,135 90,170Z" fill="#2a2015" stroke="#c9a84c" stroke-width="2"/><circle cx="200" cy="115" r="6" fill="none" stroke="#c9a84c" stroke-width="1.5"/><path d="M105,170Q100,220 105,290Q115,370 150,410Q175,440 200,445Q225,440 250,410Q285,370 295,290Q300,220 295,170Q270,145 200,135Q130,145 105,170Z" fill="url(#f0)" stroke="#1a1210" stroke-width="2.5"/><path d="M140,185Q170,175 200,178Q230,175 260,185" fill="none" stroke="#5a1515" stroke-width="2" opacity=".6"/><path d="M125,220Q145,195 180,210" fill="none" stroke="#1a1210" stroke-width="3.5" stroke-linecap="round"/><path d="M275,220Q255,195 220,210" fill="none" stroke="#1a1210" stroke-width="3.5" stroke-linecap="round"/><g class="mask-eyes" filter="url(#g0)"><ellipse cx="158" cy="235" rx="24" ry="17" fill="#881111" stroke="#1a1210" stroke-width="2"/><ellipse cx="242" cy="235" rx="24" ry="17" fill="#881111" stroke="#1a1210" stroke-width="2"/><ellipse cx="158" cy="235" rx="7" ry="9" fill="#110000"/><ellipse cx="242" cy="235" rx="7" ry="9" fill="#110000"/></g><path d="M195,270L200,315L205,270" fill="none" stroke="#1a1210" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><g class="mask-clouds" opacity=".5"><path d="M125,280Q115,268 125,258Q135,252 137,262Q138,272 128,278Z" fill="none" stroke="#c9a84c" stroke-width="1.2"/><path d="M275,280Q285,268 275,258Q265,252 263,262Q262,272 272,278Z" fill="none" stroke="#c9a84c" stroke-width="1.2"/></g><path d="M150,360Q165,342 200,338Q235,342 250,360Q240,380 200,390Q160,380 150,360Z" fill="#1a0505" stroke="#1a1210" stroke-width="2"/><path d="M170,357L173,377L176,357" fill="#e8e0d0" stroke-width=".8" stroke="#1a1210"/><path d="M224,357L227,377L230,357" fill="#e8e0d0" stroke-width=".8" stroke="#1a1210"/><path d="M158,362Q180,354 200,352Q220,354 242,362" fill="none" stroke="#992222" stroke-width="1.5"/></svg>`,
+// 1: 钟馗 Zhong Kui — gold, hat+flames
+`<svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="f1" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="#d4a44c"/><stop offset="100%" stop-color="#5a4210"/></radialGradient><filter id="g1"><feGaussianBlur stdDeviation="3" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g class="mask-horns"><rect x="105" y="95" width="190" height="40" rx="3" fill="#1a1210" stroke="#c9a84c" stroke-width="1.5"/><path d="M105,113L50,108L52,116L105,118Z" fill="#1a1210" stroke="#c9a84c" stroke-width="1"/><path d="M295,113L350,108L348,116L295,118Z" fill="#1a1210" stroke="#c9a84c" stroke-width="1"/><path d="M165,92Q162,60 170,42Q172,62 178,88" fill="#cc3322" stroke="#c9a84c" stroke-width=".8" opacity=".8"/><path d="M200,90Q198,50 205,32Q208,55 208,86" fill="#cc3322" stroke="#c9a84c" stroke-width=".8" opacity=".8"/><path d="M235,92Q238,60 230,42Q228,62 222,88" fill="#cc3322" stroke="#c9a84c" stroke-width=".8" opacity=".8"/></g><path d="M95,148Q88,210 95,290Q108,375 155,415Q178,438 200,442Q222,438 245,415Q292,375 305,290Q312,210 305,148Q270,130 200,120Q130,130 95,148Z" fill="url(#f1)" stroke="#1a1210" stroke-width="2.5"/><path d="M112,208Q135,185 160,190Q172,193 180,200" fill="none" stroke="#1a1210" stroke-width="4.5" stroke-linecap="round"/><path d="M288,208Q265,185 240,190Q228,193 220,200" fill="none" stroke="#1a1210" stroke-width="4.5" stroke-linecap="round"/><g class="mask-eyes" filter="url(#g1)"><circle cx="155" cy="228" r="20" fill="#881111" stroke="#1a1210" stroke-width="2.5"/><circle cx="245" cy="228" r="20" fill="#881111" stroke="#1a1210" stroke-width="2.5"/><circle cx="155" cy="228" r="8" fill="#110000"/><circle cx="245" cy="228" r="8" fill="#110000"/></g><path d="M193,260Q200,300 207,260" fill="none" stroke="#1a1210" stroke-width="2.5" stroke-linecap="round"/><g class="mask-clouds" opacity=".4"><path d="M118,272Q105,260 115,250Q128,245 128,258Q128,268 120,274Z" fill="none" stroke="#c9a84c" stroke-width="1.2"/><path d="M282,272Q295,260 285,250Q272,245 272,258Q272,268 280,274Z" fill="none" stroke="#c9a84c" stroke-width="1.2"/></g><g fill="none" stroke="#1a1210" stroke-width="1.8"><path d="M170,388Q165,430 160,458"/><path d="M200,392Q200,440 200,465"/><path d="M230,388Q235,430 240,458"/></g><path d="M142,352Q160,335 200,330Q240,335 258,352Q248,378 200,388Q152,378 142,352Z" fill="#1a0505" stroke="#1a1210" stroke-width="2"/><path d="M165,350L168,372L171,350" fill="#e8e0d0" stroke="#1a1210" stroke-width=".7"/><path d="M229,350L232,372L235,350" fill="#e8e0d0" stroke="#1a1210" stroke-width=".7"/></svg>`,
+// 2: 方相氏 Fang Xiang — green/bronze, 4 eyes
+`<svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="f2" cx="50%" cy="42%" r="50%"><stop offset="0%" stop-color="#3a6a5a"/><stop offset="100%" stop-color="#0f1f18"/></radialGradient><filter id="g2"><feGaussianBlur stdDeviation="3" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g class="mask-horns"><path d="M130,155Q95,100 55,30Q50,25 45,30Q70,105 95,150Z" fill="#2a2015" stroke="#c9a84c" stroke-width="1.8"/><path d="M270,155Q305,100 345,30Q350,25 355,30Q330,105 305,150Z" fill="#2a2015" stroke="#c9a84c" stroke-width="1.8"/><ellipse cx="88" cy="85" rx="12" ry="5" fill="none" stroke="#c9a84c" stroke-width="1" transform="rotate(-25,88,85)"/><ellipse cx="312" cy="85" rx="12" ry="5" fill="none" stroke="#c9a84c" stroke-width="1" transform="rotate(25,312,85)"/></g><path d="M90,165Q130,140 200,132Q270,140 310,165L315,178Q270,155 200,145Q130,155 85,178Z" fill="#1a1210" stroke="#c9a84c" stroke-width="2"/><circle cx="200" cy="155" r="5" fill="#b22222" stroke="#c9a84c" stroke-width="1.5"/><path d="M95,178Q88,230 92,300Q105,380 155,418Q178,440 200,445Q222,440 245,418Q295,380 308,300Q312,230 305,178Q270,155 200,145Q130,155 95,178Z" fill="url(#f2)" stroke="#1a1210" stroke-width="2.5"/><path d="M188,195L200,184L212,195L200,200Z" fill="none" stroke="#c9a84c" stroke-width="1.5"/><g class="mask-eyes" filter="url(#g2)"><ellipse cx="160" cy="218" rx="14" ry="10" fill="#c9a84c" stroke="#1a1210" stroke-width="1.5" opacity=".8"/><ellipse cx="240" cy="218" rx="14" ry="10" fill="#c9a84c" stroke="#1a1210" stroke-width="1.5" opacity=".8"/><circle cx="160" cy="218" r="4" fill="#1a1210"/><circle cx="240" cy="218" r="4" fill="#1a1210"/><ellipse cx="152" cy="250" rx="22" ry="16" fill="#881111" stroke="#1a1210" stroke-width="2"/><ellipse cx="248" cy="250" rx="22" ry="16" fill="#881111" stroke="#1a1210" stroke-width="2"/><ellipse cx="152" cy="250" rx="7" ry="9" fill="#110000"/><ellipse cx="248" cy="250" rx="7" ry="9" fill="#110000"/></g><path d="M115,238Q135,215 168,222" fill="none" stroke="#0f1f18" stroke-width="3.5" stroke-linecap="round"/><path d="M285,238Q265,215 232,222" fill="none" stroke="#0f1f18" stroke-width="3.5" stroke-linecap="round"/><path d="M195,275Q200,310 205,275" fill="none" stroke="#1a1210" stroke-width="2.5" stroke-linecap="round"/><g class="mask-clouds" opacity=".5"><path d="M110,290Q98,278 108,268Q120,262 120,274Q120,284 112,290Z" fill="none" stroke="#c9a84c" stroke-width="1.2"/><path d="M290,290Q302,278 292,268Q280,262 280,274Q280,284 288,290Z" fill="none" stroke="#c9a84c" stroke-width="1.2"/></g><path d="M140,362Q158,342 200,335Q242,342 260,362Q250,392 200,402Q150,392 140,362Z" fill="#0a0505" stroke="#1a1210" stroke-width="2"/><path d="M162,360L165,378L168,360" fill="#e8e0d0" stroke="#1a1210" stroke-width=".7"/><path d="M232,360L235,378L238,360" fill="#e8e0d0" stroke="#1a1210" stroke-width=".7"/></svg>`,
+// 3: 雷神 Thunder God — fierce, drum motifs
+`<svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="f3" cx="50%" cy="45%" r="50%"><stop offset="0%" stop-color="#8b4513"/><stop offset="100%" stop-color="#3a1a08"/></radialGradient><filter id="g3"><feGaussianBlur stdDeviation="3" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g class="mask-horns"><path d="M140,150Q110,80 90,30L85,28Q100,90 108,145Z" fill="#2a2015" stroke="#c9a84c" stroke-width="1.5"/><path d="M260,150Q290,80 310,30L315,28Q300,90 292,145Z" fill="#2a2015" stroke="#c9a84c" stroke-width="1.5"/><path d="M120,160Q80,120 55,80Q75,125 100,155Z" fill="#2a2015" stroke="#c9a84c" stroke-width="1"/><path d="M280,160Q320,120 345,80Q325,125 300,155Z" fill="#2a2015" stroke="#c9a84c" stroke-width="1"/></g><circle cx="200" cy="130" r="12" fill="none" stroke="#c9a84c" stroke-width="2"/><circle cx="200" cy="130" r="6" fill="none" stroke="#c9a84c" stroke-width="1"/><path d="M105,165Q100,220 105,290Q115,370 155,410Q178,440 200,445Q222,440 245,410Q285,370 295,290Q300,220 295,165Q270,145 200,135Q130,145 105,165Z" fill="url(#f3)" stroke="#1a1210" stroke-width="2.5"/><path d="M120,215Q145,188 178,205" fill="none" stroke="#1a1210" stroke-width="4" stroke-linecap="round"/><path d="M280,215Q255,188 222,205" fill="none" stroke="#1a1210" stroke-width="4" stroke-linecap="round"/><g class="mask-eyes" filter="url(#g3)"><path d="M135,232Q155,215 180,232Q155,245 135,232Z" fill="#ff4422" stroke="#1a1210" stroke-width="2"/><path d="M265,232Q245,215 220,232Q245,245 265,232Z" fill="#ff4422" stroke="#1a1210" stroke-width="2"/><circle cx="157" cy="232" r="6" fill="#110000"/><circle cx="243" cy="232" r="6" fill="#110000"/></g><path d="M193,268L200,308L207,268" fill="none" stroke="#1a1210" stroke-width="2.5" stroke-linecap="round"/><circle cx="130" cy="290" r="15" fill="none" stroke="#c9a84c" stroke-width="1.5"/><circle cx="130" cy="290" r="7" fill="none" stroke="#c9a84c" stroke-width=".8"/><circle cx="270" cy="290" r="15" fill="none" stroke="#c9a84c" stroke-width="1.5"/><circle cx="270" cy="290" r="7" fill="none" stroke="#c9a84c" stroke-width=".8"/><path d="M145,358Q165,338 200,332Q235,338 255,358Q245,382 200,392Q155,382 145,358Z" fill="#1a0505" stroke="#1a1210" stroke-width="2"/><path d="M170,356L172,374L175,356" fill="#e8e0d0" stroke="#1a1210" stroke-width=".7"/><path d="M225,356L228,374L230,356" fill="#e8e0d0" stroke="#1a1210" stroke-width=".7"/><path d="M152,360Q178,350 200,348Q222,350 248,360" fill="none" stroke="#882222" stroke-width="1.5"/></svg>`,
+// 4: 土地神 Earth God — round, gentle smile, jade green
+`<svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="f4" cx="50%" cy="42%" r="55%"><stop offset="0%" stop-color="#d4c4a0"/><stop offset="100%" stop-color="#8b7740"/></radialGradient><filter id="g4"><feGaussianBlur stdDeviation="2" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g class="mask-horns"><path d="M130,158Q115,135 120,110Q135,90 155,105Q145,130 135,155Z" fill="#4a6a45" stroke="#c9a84c" stroke-width="1.2"/><path d="M270,158Q285,135 280,110Q265,90 245,105Q255,130 265,155Z" fill="#4a6a45" stroke="#c9a84c" stroke-width="1.2"/><circle cx="138" cy="108" r="5" fill="#c9a84c" opacity=".5"/><circle cx="262" cy="108" r="5" fill="#c9a84c" opacity=".5"/></g><path d="M100,168Q92,225 98,300Q110,378 158,415Q180,438 200,442Q220,438 242,415Q290,378 302,300Q308,225 300,168Q265,148 200,138Q135,148 100,168Z" fill="url(#f4)" stroke="#1a1210" stroke-width="2.5"/><path d="M135,218Q155,205 172,212" fill="none" stroke="#5a4a30" stroke-width="2.5" stroke-linecap="round"/><path d="M265,218Q245,205 228,212" fill="none" stroke="#5a4a30" stroke-width="2.5" stroke-linecap="round"/><g class="mask-eyes" filter="url(#g4)"><path d="M140,235Q158,222 175,235" fill="none" stroke="#1a1210" stroke-width="2.5" stroke-linecap="round"/><path d="M225,235Q242,222 260,235" fill="none" stroke="#1a1210" stroke-width="2.5" stroke-linecap="round"/><circle cx="157" cy="230" r="3" fill="#1a1210"/><circle cx="243" cy="230" r="3" fill="#1a1210"/></g><path d="M195,268Q200,295 205,268" fill="none" stroke="#5a4a30" stroke-width="2" stroke-linecap="round"/><g class="mask-clouds" opacity=".4"><path d="M122,285Q112,275 120,268Q130,264 130,273Q130,282 123,286Z" fill="none" stroke="#c9a84c" stroke-width="1"/><path d="M278,285Q288,275 280,268Q270,264 270,273Q270,282 277,286Z" fill="none" stroke="#c9a84c" stroke-width="1"/></g><path d="M155,352Q175,342 200,340Q225,342 245,352Q238,372 200,380Q162,372 155,352Z" fill="#3a2015" stroke="#1a1210" stroke-width="1.5"/><path d="M165,358Q182,350 200,348Q218,350 235,358" fill="none" stroke="#cc6644" stroke-width="1.5"/><path d="M175,362Q190,368 200,370Q210,368 225,362" fill="none" stroke="#cc6644" stroke-width="1" opacity=".6"/></svg>`
+];
+
+// ═══════════════════════════════════════
+// THEMES & MODES
+// ═══════════════════════════════════════
+const THEMES=[
+  {bg:[10,8,8],ring:[180,40,40],glow:[255,50,50],gold:[201,168,76],accent:[232,60,60]},
+];
+let theme=THEMES[0];
+
+// Mode definitions: which FX are active, plus special params
+const MODES=[
+  {name:'神启',fx:{pt:1,tr:1,bn:1,rgb:1,te:1,ns:1,iv:1,rp:1,fm:1,fi:1,lt:1,rn:1,rb:1,wt:1,sd:1,cl:1},speed:1,dreamWarp:0,ghostMask:0,invertBg:0},
+  {name:'法力',fx:{pt:1,tr:1,bn:1,rgb:0,te:0,ns:0,iv:0,rp:1,fm:0,fi:1,lt:1,rn:1,rb:0,wt:0,sd:0,cl:0},speed:1,dreamWarp:0,ghostMask:0,invertBg:0},
+  {name:'水墨',fx:{pt:0,tr:1,bn:0,rgb:0,te:0,ns:0,iv:0,rp:1,fm:0,fi:0,lt:0,rn:0,rb:1,wt:1,sd:0,cl:1},speed:.8,dreamWarp:0,ghostMask:0,invertBg:0},
+  {name:'梦境',fx:{pt:1,tr:1,bn:0,rgb:0,te:0,ns:0,iv:0,rp:1,fm:0,fi:0,lt:0,rn:0,rb:1,wt:1,sd:1,cl:1},speed:.35,dreamWarp:1,ghostMask:0,invertBg:0},
+  {name:'通灵',fx:{pt:0,tr:0,bn:0,rgb:1,te:1,ns:1,iv:0,rp:0,fm:1,fi:0,lt:1,rn:1,rb:0,wt:0,sd:1,cl:0},speed:1.2,dreamWarp:0,ghostMask:1,invertBg:1},
+];
+let curMode=0;
+
+// FX state (runtime)
+const FX={pt:1,tr:1,bn:1,rgb:1,te:1,ns:1,iv:1,rp:1,fm:1,fi:1,lt:1,rn:1,rb:1,wt:1,sd:1,cl:1,ga:50};
+
+function applyMode(m){
+  curMode=m;
+  const md=MODES[m];
+  for(const k in md.fx){FX[k]=md.fx[k]}
+  // Sync toggles
+  const map={pt:'fxPt',tr:'fxTr',bn:'fxBn',rgb:'fxRgb',te:'fxTe',ns:'fxNs',iv:'fxIv',rp:'fxRp',fm:'fxFm',fi:'fxFi',lt:'fxLt',rn:'fxRn',rb:'fxRb',wt:'fxWt',sd:'fxSd',cl:'fxCl'};
+  for(const k in map){const el=$(map[k]);if(el)el.checked=!!FX[k]}
+  document.querySelectorAll('.mode-btn').forEach(b=>{b.classList.toggle('active',+b.dataset.m===m)});
+}
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let maskIdx=0,isCustom=false,ptReady=false;
+let audioCtx,analyser,gainNode,src,freqData,audioBuf;
+let bass=0,mid=0,high=0,total=0,beat=false,lastBeat=0,avgE=0;
+let isPlay=false,isMute=false,prevVol=1,startAt=0,pauseAt=0,dur=0;
+let mx=0,my=0,time=0;
+let isDrag=false;
+
+// Canvases
+const bgC=$('bgC'),ptC=$('ptC'),fxC=$('fxC'),glC=$('glC'),spC=$('specC');
+const bg=bgC.getContext('2d'),pt=ptC.getContext('2d'),fx=fxC.getContext('2d'),gl=glC.getContext('2d'),sp=spC.getContext('2d');
+const mW=$('maskWrap');
+
+function resize(){
+  const d=devicePixelRatio;
+  [bgC,ptC,fxC,glC].forEach(c=>{c.width=innerWidth*d;c.height=innerHeight*d;c.getContext('2d').setTransform(d,0,0,d,0,0)});
+  spC.width=innerWidth*d;spC.height=28*d;sp.setTransform(d,0,0,d,0,0);
+}
+resize();
+addEventListener('resize',resize);
+addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+
+// ═══════════════════════════════════════
+// PARTICLE SYSTEM
+// ═══════════════════════════════════════
+const SW=110,SH=140;
+let parts=[],eParts=[];
+
+function buildParts(img){
+  const c=document.createElement('canvas');c.width=SW;c.height=SH;
+  const x=c.getContext('2d');
+  const ar=img.naturalWidth/img.naturalHeight;
+  let dw,dh;if(ar>SW/SH){dw=SW;dh=SW/ar}else{dh=SH;dw=SH*ar}
+  x.drawImage(img,(SW-dw)/2,(SH-dh)/2,dw,dh);
+  const d=x.getImageData(0,0,SW,SH).data;
+  parts=[];
+  const px=(i,j)=>i>=0&&j>=0&&i<SW&&j<SH&&d[(j*SW+i)*4+3]>30;
+  for(let y=0;y<SH;y++)for(let x=0;x<SW;x++){
+    const i=(y*SW+x)*4,a=d[i+3];
+    if(a<30)continue;
+    parts.push({bx:x,by:y,x,y,vx:0,vy:0,r:d[i],g:d[i+1],b:d[i+2],a:a/255,isEdge:a>30&&(!px(x-1,y)||!px(x+1,y)||!px(x,y-1)||!px(x,y+1))});
+  }
+  ptReady=true;
+}
+
+function drawParts(){
+  const w=innerWidth,h=innerHeight,ms=Math.min(w*.65,h*.68),sc=ms/SH;
+  const ox=w/2-SW*sc/2,oy=h*.4-SH*sc/2;
+  const spd=MODES[curMode].speed;
+  if(FX.tr){pt.fillStyle='rgba(10,8,8,0.14)';pt.fillRect(0,0,w,h)}else pt.clearRect(0,0,w,h);
+  const bf=bass*12*spd,hv=high*3*spd,btf=beat?25+total*20:0;
+  for(const p of parts){
+    let sx=ox+p.x*sc,sy=oy+p.y*sc;
+    const mdx=sx-mx,mdy=sy-my,md=Math.sqrt(mdx*mdx+mdy*mdy);
+    if(md<150&&md>0){const f=(150-md)/150*10;p.vx+=mdx/md*f*.3;p.vy+=mdy/md*f*.3}
+    if(btf>0&&FX.pt){const cd=Math.sqrt((p.bx-SW/2)**2+(p.by-SH/2)**2)||1;p.vx+=(p.bx-SW/2)/cd*btf*(.3+Math.random()*.7)*.15;p.vy+=(p.by-SH/2)/cd*btf*(.3+Math.random()*.7)*.15}
+    if(FX.pt&&hv>.3){p.vx+=(Math.random()-.5)*hv*.8;p.vy+=(Math.random()-.5)*hv*.8}
+    if(FX.pt&&bf>1){const cd=Math.sqrt((p.bx-SW/2)**2+(p.by-SH/2)**2)||1;p.vx+=(p.bx-SW/2)/cd*bf*.02;p.vy+=(p.by-SH/2)/cd*bf*.02}
+    p.vx+=(p.bx-p.x)*.06;p.vy+=(p.by-p.y)*.06;
+    p.vx*=.88;p.vy*=.88;p.x+=p.vx*spd;p.y+=p.vy*spd;
+    sx=ox+p.x*sc;sy=oy+p.y*sc;
+    const sz=sc*(.9+bass*.4);
+    // Ghost mask mode: only draw edge
+    if(MODES[curMode].ghostMask&&!p.isEdge){continue}
+    pt.fillStyle=`rgba(${p.r},${p.g},${p.b},${MODES[curMode].ghostMask?0.7:p.a})`;
+    pt.fillRect(sx,sy,sz+.5,sz+.5);
+  }
+  // Edge burn
+  if(FX.bn&&total>.1){
+    const ep=parts.filter(p=>p.isEdge);
+    for(let s=0;s<Math.floor(total*6)+1;s++){
+      if(!ep.length)break;
+      const src=ep[Math.floor(Math.random()*ep.length)];
+      eParts.push({x:ox+src.bx*sc,y:oy+src.by*sc,vx:(Math.random()-.5)*2,vy:-1-Math.random()*3,life:30+Math.random()*40,ml:70,r:theme.glow[0],g:theme.glow[1],b:theme.glow[2],sz:1+Math.random()*2});
+    }
+    if(eParts.length>250)eParts.splice(0,eParts.length-250);
+  }
+  for(let i=eParts.length-1;i>=0;i--){
+    const e=eParts[i];e.x+=e.vx;e.y+=e.vy;e.vy-=.02;e.life--;
+    if(e.life<=0){eParts.splice(i,1);continue}
+    const t=e.life/e.ml;
+    pt.fillStyle=`rgba(${e.r},${e.g},${e.b},${t*.7})`;
+    pt.beginPath();pt.arc(e.x,e.y,e.sz*t,0,Math.PI*2);pt.fill();
+  }
+}
+
+// ═══════════════════════════════════════
+// INK WASH MOUNTAIN BACKGROUND
+// ═══════════════════════════════════════
+let mtns=[]; // layered mountain data
+function genMountains(){
+  mtns=[];
+  for(let layer=0;layer<5;layer++){
+    const pts=[];
+    const y0=innerHeight*(0.25+layer*0.1);
+    const amp=40+layer*25+Math.random()*30;
+    for(let x=0;x<=innerWidth+100;x+=20){
+      pts.push(y0+Math.sin(x*0.003+layer*2)*amp+Math.sin(x*0.008+layer)*amp*0.5+Math.random()*10);
+    }
+    mtns.push({pts,opacity:0.06+layer*0.04,y0,speed:0.08+layer*0.05});
+  }
+}
+genMountains();
+addEventListener('resize',genMountains);
+
+let mtnOff=0;
+function drawInkBg(){
+  const w=innerWidth,h=innerHeight;
+  // Sky gradient
+  const inv=MODES[curMode].invertBg;
+  if(inv){
+    bg.fillStyle='#e8e0d0';bg.fillRect(0,0,w,h);
+  }else{
+    const grad=bg.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0,'#0a0808');grad.addColorStop(0.5,'#12100e');grad.addColorStop(1,'#0a0808');
+    bg.fillStyle=grad;bg.fillRect(0,0,w,h);
+  }
+
+  mtnOff+=0.3*(1+total*2)*MODES[curMode].speed;
+
+  // Draw mountains back to front
+  for(let l=0;l<mtns.length;l++){
+    const m=mtns[l];
+    const off=mtnOff*m.speed;
+    const shake=bass*3*(l/5);
+    bg.beginPath();
+    bg.moveTo(0,h);
+    for(let i=0;i<m.pts.length;i++){
+      const x=i*20-off%(20)+shake*(Math.random()-.5);
+      const y=m.pts[(i+Math.floor(off/20))%m.pts.length]+shake*(Math.random()-.5);
+      if(i===0)bg.moveTo(x,y);else bg.lineTo(x,y);
+    }
+    bg.lineTo(w+100,h);bg.lineTo(0,h);bg.closePath();
+    const c=inv?`rgba(30,25,20,${m.opacity*1.5})`:`rgba(180,170,155,${m.opacity})`;
+    bg.fillStyle=c;bg.fill();
+  }
+
+  // Cloud/fog layers
+  const fogA=0.02+mid*0.04;
+  for(let i=0;i<3;i++){
+    const y=h*(.2+i*.15)+Math.sin(time*.2+i)*20;
+    const grad=bg.createRadialGradient(w/2+Math.sin(time*.1+i)*200,y,10,w/2,y,w*.4);
+    const fc=inv?`rgba(40,35,30,${fogA})`:`rgba(160,150,135,${fogA})`;
+    grad.addColorStop(0,fc);grad.addColorStop(1,'transparent');
+    bg.fillStyle=grad;bg.fillRect(0,0,w,h);
+  }
+
+  // River at bottom
+  const riverY=h*0.82;
+  const riverGrad=bg.createLinearGradient(0,riverY,0,h);
+  if(inv){
+    riverGrad.addColorStop(0,'rgba(40,35,30,0.1)');riverGrad.addColorStop(1,'rgba(40,35,30,0.3)');
+  }else{
+    riverGrad.addColorStop(0,'rgba(140,130,115,0.05)');riverGrad.addColorStop(1,'rgba(140,130,115,0.12)');
+  }
+  bg.fillStyle=riverGrad;bg.fillRect(0,riverY,w,h-riverY);
+
+  // Ripple lines
+  bg.strokeStyle=inv?'rgba(50,40,30,0.08)':'rgba(180,170,150,0.04)';
+  bg.lineWidth=1;
+  for(let i=0;i<5;i++){
+    const ry=riverY+10+i*15;
+    bg.beginPath();
+    for(let x=0;x<w;x+=5){
+      const y=ry+Math.sin(x*0.02+time*1.5+i)*2+Math.sin(x*0.05+time*2)*(1+bass*3);
+      x===0?bg.moveTo(x,y):bg.lineTo(x,y);
+    }
+    bg.stroke();
+  }
+
+  // Drifting leaf/petal particles
+  if(Math.random()<0.02+total*0.03){
+    leafParts.push({x:w+10,y:Math.random()*h*0.7,vx:-0.5-Math.random(),vy:0.2+Math.random()*0.3,rot:Math.random()*6.28,life:300+Math.random()*200,sz:2+Math.random()*4});
+  }
+  for(let i=leafParts.length-1;i>=0;i--){
+    const p=leafParts[i];
+    p.x+=p.vx*(1+total);p.y+=p.vy+Math.sin(time+i)*0.3;p.rot+=0.02;p.life--;
+    if(p.life<0||p.x<-20){leafParts.splice(i,1);continue}
+    bg.save();bg.translate(p.x,p.y);bg.rotate(p.rot);
+    bg.fillStyle=inv?`rgba(40,30,20,${0.15*p.life/300})`:`rgba(180,160,120,${0.08*p.life/300})`;
+    bg.fillRect(-p.sz/2,-p.sz/4,p.sz,p.sz/2);
+    bg.restore();
+  }
+
+  // Subtle center glow for mask area
+  const cGrad=bg.createRadialGradient(w/2,h*.4,10,w/2,h*.4,h*.4);
+  cGrad.addColorStop(0,`rgba(${theme.ring[0]},${theme.ring[1]},${theme.ring[2]},${0.02+total*0.04})`);
+  cGrad.addColorStop(1,'transparent');
+  bg.fillStyle=cGrad;bg.fillRect(0,0,w,h);
+}
+let leafParts=[];
+
+// ═══════════════════════════════════════
+// VISUALIZATION EFFECTS
+// ═══════════════════════════════════════
+let ripples=[],fireP=[],starP=[],lightnings=[];
+const RUNES='卜占兆吉凶甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥';
+let runeAngle=0,cloudAngle=0;
+
+function drawVizFX(){
+  const w=innerWidth,h=innerHeight,cx=w/2,cy=h*.4;
+  fx.clearRect(0,0,w,h);
+  if(!freqData)return;
+  const spd=MODES[curMode].speed;
+  const dw=MODES[curMode].dreamWarp;
+
+  // Dream warp: subtle global distortion
+  if(dw){
+    fx.save();
+    const warpX=Math.sin(time*.3)*8*dw;
+    const warpY=Math.cos(time*.2)*5*dw;
+    fx.translate(warpX,warpY);
+  }
+
+  // 1. Ripple rings
+  if(FX.rp){
+    if(total>.2){const cnt=beat?3:1;for(let i=0;i<cnt;i++)if(ripples.length<35)ripples.push({r:70+Math.random()*30,maxR:280+total*400+Math.random()*100,speed:(1.5+total*4)*spd,alpha:0.3+total*0.5})}
+    for(let i=ripples.length-1;i>=0;i--){
+      const rp=ripples[i];rp.r+=rp.speed;rp.alpha*=0.985;
+      if(rp.r>rp.maxR||rp.alpha<.01){ripples.splice(i,1);continue}
+      const p=rp.r/rp.maxR;
+      fx.beginPath();fx.arc(cx,cy,rp.r,0,Math.PI*2);
+      fx.strokeStyle=`rgba(${theme.ring[0]},${theme.ring[1]},${theme.ring[2]},${rp.alpha*(1-p)})`;
+      fx.lineWidth=1.5+(1-p)*2;fx.stroke();
+      if(p<.4){fx.beginPath();fx.arc(cx,cy,rp.r*.98,0,Math.PI*2);fx.strokeStyle=`rgba(${theme.gold[0]},${theme.gold[1]},${theme.gold[2]},${rp.alpha*.25*(1-.4-p)})`;fx.lineWidth=.7;fx.stroke()}
+    }
+  }
+
+  // 2. 360° frequency mountains
+  if(FX.fm){
+    const r0=120+bass*30,bins=freqData.length;
+    fx.beginPath();
+    for(let i=0;i<bins;i++){
+      const a=(i/bins)*Math.PI*2-Math.PI/2;
+      const v=(freqData[i]/255);
+      const r=r0+v*140;
+      const px=cx+Math.cos(a)*r,py=cy+Math.sin(a)*r;
+      i===0?fx.moveTo(px,py):fx.lineTo(px,py);
+    }
+    fx.closePath();
+    fx.strokeStyle=`rgba(${theme.gold[0]},${theme.gold[1]},${theme.gold[2]},${0.15+total*0.3})`;
+    fx.lineWidth=1;fx.stroke();
+    fx.fillStyle=`rgba(${theme.ring[0]},${theme.ring[1]},${theme.ring[2]},${0.03+total*0.05})`;
+    fx.fill();
+  }
+
+  // 3. Fire particles
+  if(FX.fi&&total>.15){
+    const cnt=Math.floor(total*8*spd)+1;
+    for(let i=0;i<cnt;i++){
+      const side=Math.random()<.33?0:Math.random()<.5?-1:1;
+      const sx=cx+side*(50+Math.random()*60);
+      const sy=side===0?cy-90:cy+Math.random()*60-30;
+      fireP.push({x:sx,y:sy,vx:(Math.random()-.5)*2+side*1.5,vy:-2-Math.random()*4,life:20+Math.random()*30,ml:50,sz:2+Math.random()*4});
+    }
+    if(fireP.length>200)fireP.splice(0,fireP.length-200);
+  }
+  for(let i=fireP.length-1;i>=0;i--){
+    const p=fireP[i];p.x+=p.vx*spd;p.y+=p.vy*spd;p.vy*=.96;p.life--;
+    if(p.life<0){fireP.splice(i,1);continue}
+    const t=p.life/p.ml;
+    const r=255,g=Math.floor(100+t*80),b=20;
+    fx.fillStyle=`rgba(${r},${g},${b},${t*.6})`;
+    fx.beginPath();fx.arc(p.x,p.y,p.sz*t,0,Math.PI*2);fx.fill();
+  }
+
+  // 4. Lightning on beat
+  if(FX.lt&&beat&&total>.4){
+    for(let i=0;i<2+Math.floor(total*3);i++){
+      const a=Math.random()*Math.PI*2;
+      const pts=[{x:cx+Math.cos(a)*40,y:cy+Math.sin(a)*40}];
+      let px=pts[0].x,py=pts[0].y;
+      const len=60+Math.random()*120;
+      for(let j=0;j<8;j++){
+        px+=Math.cos(a)*(len/8)+(Math.random()-.5)*30;
+        py+=Math.sin(a)*(len/8)+(Math.random()-.5)*30;
+        pts.push({x:px,y:py});
+      }
+      lightnings.push({pts,life:5+Math.floor(Math.random()*4)});
+    }
+  }
+  for(let i=lightnings.length-1;i>=0;i--){
+    const l=lightnings[i];l.life--;
+    if(l.life<0){lightnings.splice(i,1);continue}
+    fx.beginPath();
+    l.pts.forEach((p,j)=>j===0?fx.moveTo(p.x,p.y):fx.lineTo(p.x,p.y));
+    fx.strokeStyle=`rgba(${theme.gold[0]},${theme.gold[1]},${theme.gold[2]},${l.life/9})`;
+    fx.lineWidth=1+Math.random();fx.stroke();
+  }
+
+  // 5. Rune ring
+  if(FX.rn){
+    runeAngle+=(.005+high*.02)*spd;
+    const rr=200+bass*30;
+    fx.save();fx.translate(cx,cy);fx.rotate(runeAngle);
+    fx.font='14px serif';fx.textAlign='center';
+    for(let i=0;i<16;i++){
+      const a=(i/16)*Math.PI*2;
+      const ch=RUNES[Math.floor(time*2+i)%RUNES.length];
+      const alpha=0.15+Math.sin(time*3+i)*0.1+total*0.3;
+      fx.fillStyle=`rgba(${theme.gold[0]},${theme.gold[1]},${theme.gold[2]},${alpha})`;
+      fx.fillText(ch,Math.cos(a)*rr,Math.sin(a)*rr+5);
+    }
+    fx.restore();
+  }
+
+  // 6. Cloud swirls
+  if(FX.cl){
+    cloudAngle+=(.003+mid*.01)*spd;
+    fx.save();fx.translate(cx,cy);
+    for(let i=0;i<6;i++){
+      const a=cloudAngle+i*Math.PI/3;
+      const r=150+Math.sin(time*.5+i)*30+mid*40;
+      const x=Math.cos(a)*r,y=Math.sin(a)*r;
+      const grad=fx.createRadialGradient(x,y,2,x,y,20+mid*15);
+      grad.addColorStop(0,`rgba(${theme.gold[0]},${theme.gold[1]},${theme.gold[2]},${0.06+mid*0.08})`);
+      grad.addColorStop(1,'transparent');
+      fx.fillStyle=grad;fx.fillRect(x-30,y-30,60,60);
+    }
+    fx.restore();
+  }
+
+  // 7. Ribbon waveforms (water sleeves)
+  if(FX.rb){
+    for(let side=-1;side<=1;side+=2){
+      fx.beginPath();
+      const baseX=cx+side*120;
+      for(let i=0;i<40;i++){
+        const fi=Math.floor(i/40*freqData.length*.6);
+        const v=(freqData[fi]||0)/255;
+        const t=i/40;
+        const x=baseX+side*i*4;
+        const y=cy-40+t*120+Math.sin(time*2+i*.3)*15*v+v*30*side;
+        i===0?fx.moveTo(x,y):fx.lineTo(x,y);
+      }
+      fx.strokeStyle=`rgba(${theme.accent[0]},${theme.accent[1]},${theme.accent[2]},${0.12+total*0.2})`;
+      fx.lineWidth=1.5;fx.stroke();
+    }
+  }
+
+  // 8. Water reflection
+  if(FX.wt){
+    const ry=h*0.72;
+    // Mirrored glow
+    const grad=fx.createRadialGradient(cx,ry,10,cx,ry,150);
+    grad.addColorStop(0,`rgba(${theme.ring[0]},${theme.ring[1]},${theme.ring[2]},${0.03+bass*0.06})`);
+    grad.addColorStop(1,'transparent');
+    fx.fillStyle=grad;fx.fillRect(cx-200,ry-50,400,200);
+    // Ripple circles in water
+    for(let i=0;i<3;i++){
+      const rr=20+i*25+Math.sin(time+i)*10+bass*15;
+      fx.beginPath();fx.ellipse(cx,ry+20,rr,rr*.3,0,0,Math.PI*2);
+      fx.strokeStyle=`rgba(${theme.gold[0]},${theme.gold[1]},${theme.gold[2]},${0.05+bass*0.08-i*0.02})`;
+      fx.lineWidth=.8;fx.stroke();
+    }
+  }
+
+  // 9. Star dust
+  if(FX.sd){
+    if(Math.random()<.2+total*.5){
+      starP.push({x:Math.random()*w,y:Math.random()*h*.7,life:40+Math.random()*60,ml:100,sz:1+Math.random()*1.5});
+    }
+    if(starP.length>80)starP.splice(0,starP.length-80);
+  }
+  for(let i=starP.length-1;i>=0;i--){
+    const s=starP[i];s.life--;
+    if(s.life<0){starP.splice(i,1);continue}
+    const t=s.life/s.ml;
+    const flicker=Math.sin(time*10+i)*0.3+0.7;
+    fx.fillStyle=`rgba(${theme.gold[0]},${theme.gold[1]},${theme.gold[2]},${t*0.4*flicker})`;
+    fx.beginPath();fx.arc(s.x,s.y+Math.sin(time+i)*.5,s.sz*t,0,Math.PI*2);fx.fill();
+  }
+
+  if(dw)fx.restore();
+}
+
+// ═══════════════════════════════════════
+// GLITCH ENGINE
+// ═══════════════════════════════════════
+let gTimer=0,gActive=false,ivTimer=0;
+function doGlitch(){
+  const w=innerWidth,h=innerHeight,ga=FX.ga/100;
+  const intensity=ga*(.2+total*.8);
+  if(intensity<.01||(!FX.rgb&&!FX.te&&!FX.ns&&!FX.iv)){glC.style.opacity='0';return}
+  glC.style.opacity='1';gl.clearRect(0,0,w,h);
+  gTimer--;
+  if(gTimer<=0){gActive=Math.random()<intensity*.4||(beat&&ga>.2);gTimer=gActive?2+Math.floor(Math.random()*5):3+Math.floor(Math.random()*12*(1-intensity))}
+  if(!gActive&&!beat){glC.style.opacity='0';return}
+  glC.style.opacity=String(Math.min(intensity*1.5,1));
+  glC.style.mixBlendMode='screen';
+  if(FX.rgb&&intensity>.1){
+    const s=Math.floor(intensity*15*(beat?3:1));
+    gl.globalCompositeOperation='screen';
+    gl.drawImage(ptC,(Math.random()-.5)*s*2,0);
+    gl.fillStyle=`rgba(255,0,0,${.12*intensity})`;gl.fillRect(0,0,w,h);
+    gl.drawImage(ptC,(Math.random()-.5)*s*2,Math.random()*2-1);
+    gl.fillStyle=`rgba(0,0,255,${.1*intensity})`;gl.fillRect(0,0,w,h);
+  }
+  if(FX.te&&intensity>.15){
+    const tc=Math.floor(intensity*(beat?7:2));
+    for(let t=0;t<tc;t++){const y=Math.floor(Math.random()*h),th=2+Math.floor(Math.random()*7*intensity);gl.drawImage(ptC,0,y,w,th,Math.floor((Math.random()-.5)*35*intensity),y,w,th)}
+  }
+  if(FX.ns){
+    gl.fillStyle=`rgba(255,255,255,${.012*intensity})`;
+    for(let y=0;y<h;y+=2)gl.fillRect(0,y,w,1);
+    const nc=Math.floor(intensity*150*(beat?3:1));
+    for(let n=0;n<nc;n++){gl.fillStyle=`rgba(255,255,255,${Math.random()*.4*intensity})`;gl.fillRect(Math.random()*w,Math.random()*h,1+Math.random()*2,1+Math.random()*2)}
+  }
+  if(FX.iv){ivTimer--;if(ivTimer<=0&&beat&&Math.random()<.12*ga)ivTimer=3+Math.floor(Math.random()*4);if(ivTimer>0){glC.style.mixBlendMode='difference';gl.fillStyle=`rgba(255,255,255,${.5*ga})`;gl.fillRect(0,0,w,h)}}
+}
+
+// ═══════════════════════════════════════
+// SVG MASK UPDATE
+// ═══════════════════════════════════════
+function setMask(i){
+  isCustom=false;ptReady=false;
+  ptC.style.display='none';glC.style.opacity='0';mW.style.display='';
+  maskIdx=i%MASKS.length;
+  mW.innerHTML=MASKS[maskIdx];
+}
+
+function setCustom(url){
+  isCustom=true;
+  mW.innerHTML='';mW.style.display='none';
+  ptC.style.display='';
+  const img=new Image();img.onload=()=>buildParts(img);img.src=url;
+  $('fxPanel').classList.add('visible');
+}
+setMask(0);
+
+function updateSVG(){
+  const svg=mW.querySelector('svg');if(!svg)return;
+  const p=1+bass*.04+(beat?.03:0);
+  const tx=(Math.random()-.5)*bass*4,ty=(Math.random()-.5)*bass*4;
+  // Dream warp: add subtle oscillation
+  const dw=MODES[curMode].dreamWarp;
+  const wx=dw?Math.sin(time*.4)*5:0;
+  // Gesture: full burst scale pulse
+  const gp=gestureMode&&gestState.fullBurst>0.2?gestState.fullBurst*0.08:0;
+  mW.style.transform=`translate(calc(-50% + ${tx+wx}px),calc(-50% + ${ty}px)) scale(${p+gp})`;
+  const gi=Math.min(bass*2,1);
+  svg.querySelectorAll('feGaussianBlur').forEach(f=>f.setAttribute('stdDeviation',2+bass*8));
+  const h=svg.querySelector('.mask-horns');
+  if(h){const a=Math.sin(time*8)*high*4;h.setAttribute('transform',`rotate(${a},200,140) scale(1,${1+high*.08})`)}
+  cloudAngle+=mid*2;
+  const c=svg.querySelector('.mask-clouds');
+  if(c)c.setAttribute('transform',`rotate(${Math.sin(cloudAngle*.02)*8},200,290)`);
+  // Ghost mode: make SVG semi-transparent
+  if(MODES[curMode].ghostMask)svg.style.opacity=0.15+high*0.3;
+  else svg.style.opacity=1;
+}
+
+// ═══════════════════════════════════════
+// AUDIO ENGINE
+// ═══════════════════════════════════════
+function initAudio(file){
+  const rd=new FileReader();
+  rd.onload=e=>{
+    if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    if(!gainNode){gainNode=audioCtx.createGain();analyser=audioCtx.createAnalyser();analyser.fftSize=512;analyser.smoothingTimeConstant=.82;freqData=new Uint8Array(analyser.frequencyBinCount);gainNode.connect(analyser);analyser.connect(audioCtx.destination)}
+    audioCtx.decodeAudioData(e.target.result,buf=>{
+      if(src)try{src.stop()}catch(_){}
+      audioBuf=buf;dur=buf.duration;pauseAt=0;$('tTot').textContent=fmt(dur);
+      playAt(0);$('overlay').classList.add('hidden');$('hud').classList.add('visible');$('modeBar').classList.add('visible');
+    });
+  };rd.readAsArrayBuffer(file);
+}
+function playAt(o){if(src)try{src.stop()}catch(_){}src=audioCtx.createBufferSource();src.buffer=audioBuf;src.connect(gainNode);src.onended=()=>{if(curTime()>=dur-.1){pauseAt=0;isPlay=false;$('bPlay').textContent='▶'}};src.start(0,o);startAt=audioCtx.currentTime-o;pauseAt=0;isPlay=true;$('bPlay').textContent='⏸'}
+function curTime(){if(!audioCtx||!audioBuf)return 0;return isPlay?Math.min(audioCtx.currentTime-startAt,dur):pauseAt}
+function seek(t){t=Math.max(0,Math.min(t,dur));if(isPlay)playAt(t);else{pauseAt=t;$('tCur').textContent=fmt(t);$('pFill').style.width=(t/dur*100)+'%'}}
+function togPlay(){if(!audioBuf)return;if(audioCtx.state==='suspended')audioCtx.resume();if(isPlay){pauseAt=curTime();try{src.stop()}catch(_){}isPlay=false;$('bPlay').textContent='▶'}else playAt(pauseAt)}
+function fmt(s){const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec}
+function analyse(){
+  if(!analyser)return;
+  analyser.getByteFrequencyData(freqData);
+  const bins=freqData.length,be=Math.floor(bins*.08),me=Math.floor(bins*.45);
+  let bS=0,mS=0,hS=0;
+  for(let i=0;i<bins;i++){const v=freqData[i]/255;if(i<be)bS+=v;else if(i<me)mS+=v;else hS+=v}
+  bass=bS/be;mid=mS/(me-be);high=hS/(bins-me);
+  total=(bass+mid+high)/3;avgE=avgE*.97+total*.03;
+  const now=performance.now();
+  if(total>avgE*1.25&&total>.4&&now-lastBeat>160){beat=true;lastBeat=now}else beat=false;
+}
+
+// ═══════════════════════════════════════
+// LYRICS ENGINE
+// ═══════════════════════════════════════
+let lyrics=[],lrcLoaded=false;
+function parseLRC(text){
+  lyrics=[];
+  const lines=text.split('\n');
+  for(const line of lines){
+    // Extract all [mm:ss.xx] timestamps from the line
+    const tags=[];
+    let rest=line;
+    const tagRe=/\[(\d+):(\d+)(?:\.(\d+))?\]/g;
+    let tm;
+    while((tm=tagRe.exec(line))!==null){
+      const min=parseInt(tm[1]),sec=parseInt(tm[2]);
+      let ms=0;
+      if(tm[3]){
+        const msStr=tm[3];
+        // Handle 1,2,3 digit milliseconds
+        if(msStr.length===1)ms=parseInt(msStr)*100;
+        else if(msStr.length===2)ms=parseInt(msStr)*10;
+        else ms=parseInt(msStr.substring(0,3));
+      }
+      tags.push(min*60+sec+ms/1000);
+    }
+    // Get text after all tags
+    const txt=line.replace(/\[\d+:\d+(?:\.\d+)?\]/g,'').trim();
+    if(tags.length>0&&txt){
+      // One line can have multiple timestamps (e.g. chorus repeats)
+      for(const t of tags)lyrics.push({time:t,text:txt});
+    }
+    // Skip metadata tags like [ti:...] [ar:...] and empty lines
+  }
+  // Sort strictly by time ascending
+  lyrics.sort((a,b)=>a.time-b.time);
+  lrcLoaded=true;
+}
+
+let lastLyrIdx=-2;
+function drawLyrics(){
+  const wrap=$('lyricsWrap');
+  if(!lrcLoaded||!lyrics.length){wrap.innerHTML='';return}
+  const t=curTime();
+  // Find current active lyric: last one whose time <= current playback time
+  let cur=-1;
+  for(let i=0;i<lyrics.length;i++){
+    if(lyrics[i].time<=t)cur=i;
+    else break;
+  }
+  // Only update DOM when the active line changes
+  if(cur===lastLyrIdx)return;
+  lastLyrIdx=cur;
+  // Show: 2 prev, current, 3 next
+  let html='';
+  const showStart=Math.max(0,cur-2);
+  const showEnd=Math.min(lyrics.length-1,cur+3);
+  for(let i=showStart;i<=showEnd;i++){
+    let cls='';
+    if(i===cur)cls='active';
+    else if(i<cur)cls='prev';
+    else cls='next';
+    html+=`<div class="line ${cls}">${lyrics[i].text}</div>`;
+  }
+  wrap.innerHTML=html;
+}
+
+// ═══════════════════════════════════════
+// SPECTRUM BAR
+// ═══════════════════════════════════════
+function drawSpec(){
+  if(!freqData)return;
+  const w=innerWidth,h=28;sp.clearRect(0,0,w,h);
+  const bins=freqData.length,bw=w/bins;
+  for(let i=0;i<bins;i++){
+    const v=freqData[i]/255,bH=v*h,t=i/bins;
+    sp.fillStyle=`rgba(${Math.round(theme.accent[0]*(1-t)+theme.gold[0]*t)},${Math.round(theme.accent[1]*(1-t)+theme.gold[1]*t)},${Math.round(theme.accent[2]*(1-t)+theme.gold[2]*t)},${.4+v*.6})`;
+    sp.fillRect(i*bw,h-bH,bw-.5,bH);
+  }
+}
+
+// ═══════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════
+let recorder=null,recChunks=[],recMime='',recExt='',recCanvas=null,recBlobUrl='';
+function screenshot(){
+  const c=document.createElement('canvas');c.width=innerWidth;c.height=innerHeight;
+  const x=c.getContext('2d');
+  x.drawImage(bgC,0,0,innerWidth,innerHeight);
+  if(isCustom&&ptReady)x.drawImage(ptC,0,0,innerWidth,innerHeight);
+  x.drawImage(fxC,0,0,innerWidth,innerHeight);
+  if(isCustom)x.drawImage(glC,0,0,innerWidth,innerHeight);
+  // Draw SVG mask if not custom
+  if(!isCustom){
+    const svg=mW.querySelector('svg');
+    if(svg){
+      const svgData=new XMLSerializer().serializeToString(svg);
+      const img=new Image();
+      img.onload=()=>{
+        const ms=Math.min(innerWidth*.55,innerHeight*.68);
+        const mwR=ms*(400/500);const mhR=ms;
+        x.drawImage(img,innerWidth/2-mwR/2,innerHeight*.4-mhR/2,mwR,mhR);
+        const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='nuo-dance-'+Date.now()+'.png';a.click();
+      };
+      img.src='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(svgData)));
+      return;
+    }
+  }
+  const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='nuo-dance-'+Date.now()+'.png';a.click();
+}
+
+function pickMime(){
+  // Try MP4 first, then MOV, then WebM
+  const tries=[
+    {mime:'video/mp4',ext:'mp4'},
+    {mime:'video/mp4;codecs=avc1',ext:'mp4'},
+    {mime:'video/quicktime',ext:'mov'},
+    {mime:'video/webm;codecs=vp9,opus',ext:'webm'},
+    {mime:'video/webm;codecs=vp9',ext:'webm'},
+    {mime:'video/webm;codecs=vp8,opus',ext:'webm'},
+    {mime:'video/webm',ext:'webm'},
+  ];
+  for(const t of tries){if(MediaRecorder.isTypeSupported(t.mime))return t}
+  return{mime:'',ext:'webm'};
+}
+
+function recDrawFrame(){
+  if(!recCanvas||!recorder||recorder.state!=='recording')return;
+  const rw=recCanvas.width,rh=recCanvas.height;
+  const rx=recCanvas.getContext('2d');
+  rx.clearRect(0,0,rw,rh);
+  // Source canvases may be at devicePixelRatio resolution; draw full source into CSS-pixel dest
+  rx.drawImage(bgC,0,0,rw,rh);
+  if(isCustom&&ptReady)rx.drawImage(ptC,0,0,rw,rh);
+  rx.drawImage(fxC,0,0,rw,rh);
+  if(isCustom)rx.drawImage(glC,0,0,rw,rh);
+  // Draw SVG mask onto recording canvas
+  if(!isCustom&&recSVGImg){
+    const ms=Math.min(rw*.55,rh*.68);
+    const mwR=ms*(400/500);const mhR=ms;
+    rx.drawImage(recSVGImg,rw/2-mwR/2,rh*.4-mhR/2,mwR,mhR);
+  }
+  // Red recording dot
+  rx.fillStyle='rgba(220,40,40,.9)';rx.beginPath();rx.arc(20,20,6,0,Math.PI*2);rx.fill();
+  rx.fillStyle='rgba(220,40,40,.5)';rx.font='11px sans-serif';rx.fillText('REC',32,24);
+  requestAnimationFrame(recDrawFrame);
+}
+
+let recSVGImg=null;
+function updateRecSVG(){
+  if(isCustom){recSVGImg=null;return}
+  const svg=mW.querySelector('svg');
+  if(!svg){recSVGImg=null;return}
+  const svgData=new XMLSerializer().serializeToString(svg);
+  const img=new Image();
+  img.onload=()=>{recSVGImg=img};
+  img.src='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(svgData)));
+}
+
+function toggleRecord(){
+  if(recorder&&recorder.state==='recording'){
+    recorder.stop();
+    $('bRec').textContent='录制';$('bRec').classList.remove('active');
+    $('recDot').classList.remove('visible');
+    return;
+  }
+  // Prepare offscreen merge canvas at CSS pixel size
+  recCanvas=document.createElement('canvas');
+  recCanvas.width=innerWidth;recCanvas.height=innerHeight;
+  updateRecSVG();
+
+  // Create video stream from the recording canvas
+  const stream=recCanvas.captureStream(30);
+  console.log('[REC] Video tracks:',stream.getVideoTracks().length);
+
+  // Add audio track
+  if(audioCtx&&gainNode){
+    try{
+      const dest=audioCtx.createMediaStreamDestination();
+      gainNode.connect(dest);
+      const aTracks=dest.stream.getAudioTracks();
+      if(aTracks.length)stream.addTrack(aTracks[0]);
+      console.log('[REC] Audio tracks:',aTracks.length);
+    }catch(e){console.warn('[REC] Audio capture failed:',e)}
+  }
+
+  // Try MP4 first (Safari, Chrome 130+), then WebM
+  const mimeOptions=[
+    {mime:'video/mp4;codecs=avc1.42E01E,mp4a.40.2',ext:'mp4'},
+    {mime:'video/mp4;codecs=avc1',ext:'mp4'},
+    {mime:'video/mp4',ext:'mp4'},
+    {mime:'video/webm;codecs=vp9,opus',ext:'webm'},
+    {mime:'video/webm;codecs=vp9',ext:'webm'},
+    {mime:'video/webm;codecs=vp8,opus',ext:'webm'},
+    {mime:'video/webm',ext:'webm'},
+  ];
+  recMime='';recExt='mp4';
+  for(const m of mimeOptions){
+    if(MediaRecorder.isTypeSupported(m.mime)){recMime=m.mime;recExt=m.ext;break}
+  }
+  if(recExt!=='mp4')console.log('[REC] MP4 not supported, using WebM');
+  console.log('[REC] mimeType:',recMime||'(default)','ext:',recExt);
+  console.log('[REC] Stream — video:',stream.getVideoTracks().length,'audio:',stream.getAudioTracks().length);
+
+  recChunks=[];
+  const opts=recMime?{mimeType:recMime}:{};
+  try{recorder=new MediaRecorder(stream,opts)}catch(e){console.warn('[REC] Fallback recorder:',e);recorder=new MediaRecorder(stream)}
+  recorder.ondataavailable=e=>{if(e.data.size>0)recChunks.push(e.data)};
+  recorder.onstop=()=>{
+    const blob=new Blob(recChunks,{type:recMime||'video/webm'});
+    if(recBlobUrl)URL.revokeObjectURL(recBlobUrl);
+    recBlobUrl=URL.createObjectURL(blob);
+    console.log('[REC] Recording complete, size:',blob.size,'bytes');
+    // Show preview
+    const vid=$('rpVideo');vid.src=recBlobUrl;
+    $('recPreview').classList.add('visible');
+    $('rpDownload').onclick=()=>{
+      const a=document.createElement('a');a.href=recBlobUrl;a.download='nuo-dance-'+Date.now()+'.'+recExt;a.click();
+    };
+    $('rpClose').onclick=()=>{$('recPreview').classList.remove('visible');vid.pause()};
+    recCanvas=null;
+  };
+  // Start recorder FIRST, then begin drawing frames
+  recorder.start(100);
+  recDrawFrame();
+  $('bRec').textContent='■ 停止';$('bRec').classList.add('active');
+  $('recDot').classList.add('visible');
+}
+
+// ═══════════════════════════════════════
+// MAIN LOOP
+// ═══════════════════════════════════════
+function animate(){
+  requestAnimationFrame(animate);
+  time+=.016*MODES[curMode].speed;
+  analyse();
+  drawInkBg();
+
+  if(isCustom&&ptReady){drawParts();doGlitch()}
+  else{updateSVG();pt.clearRect(0,0,innerWidth,innerHeight);glC.style.opacity='0';if(recorder&&recorder.state==='recording')updateRecSVG()}
+
+  drawVizFX();drawSpec();drawLyrics();
+  // Progress
+  if(audioBuf){const c=curTime();$('tCur').textContent=fmt(c);if(!isDrag)$('pFill').style.width=(c/dur*100)+'%'}
+}
+
+// ═══════════════════════════════════════
+// CONTROLS
+// ═══════════════════════════════════════
+$('fileIn').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;$('trackName').textContent=f.name.replace(/\.[^.]+$/,'');initAudio(f)});
+$('lrcIn').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>parseLRC(ev.target.result);r.readAsText(f)});
+$('bMask').addEventListener('click',()=>setMask(maskIdx+1));
+$('bFS').addEventListener('click',()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen()});
+$('bPlay').addEventListener('click',togPlay);
+$('bRew').addEventListener('click',()=>seek(curTime()-10));
+$('bFwd').addEventListener('click',()=>seek(curTime()+10));
+$('vSldr').addEventListener('input',e=>{const v=parseFloat(e.target.value);if(gainNode)gainNode.gain.value=v;isMute=v===0;$('bMut').textContent=v===0?'🔇':v<.5?'🔉':'🔊'});
+$('bMut').addEventListener('click',()=>{if(!gainNode)return;if(isMute){gainNode.gain.value=prevVol;$('vSldr').value=prevVol;isMute=false;$('bMut').textContent=prevVol<.5?'🔉':'🔊'}else{prevVol=gainNode.gain.value||1;gainNode.gain.value=0;$('vSldr').value=0;isMute=true;$('bMut').textContent='🔇'}});
+$('bFx').addEventListener('click',()=>$('fxPanel').classList.toggle('visible'));
+$('bExport').addEventListener('click',screenshot);
+$('bRec').addEventListener('click',toggleRecord);
+
+// Upload zone for custom mask
+const uz=$('uploadZone');
+$('bCustom').addEventListener('click',()=>uz.classList.toggle('visible'));
+uz.addEventListener('click',e=>{if(e.target.classList.contains('uz-close'))return;$('maskIn').click()});
+uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('dragover')});
+uz.addEventListener('dragleave',()=>uz.classList.remove('dragover'));
+uz.addEventListener('drop',e=>{e.preventDefault();uz.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))loadCustomMask(f)});
+$('maskIn').addEventListener('change',e=>{const f=e.target.files[0];if(f)loadCustomMask(f)});
+function loadCustomMask(f){
+  const r=new FileReader();r.onload=ev=>{
+    const preview=$('uzPreview');
+    preview.src=ev.target.result;preview.style.display='block';
+    // Hide icon/text
+    uz.querySelector('.uz-icon').style.display='none';
+    uz.querySelector('.uz-title').textContent=f.name;
+    uz.querySelector('.uz-hint').textContent='点击更换图片';
+    setCustom(ev.target.result);
+    // Auto-close upload zone after brief delay
+    setTimeout(()=>uz.classList.remove('visible'),800);
+  };r.readAsDataURL(f);
+}
+
+// Mode buttons
+document.querySelectorAll('.mode-btn').forEach(b=>b.addEventListener('click',()=>applyMode(+b.dataset.m)));
+
+// Progress drag
+const pT=$('pTrk');
+function pct(e){const r=pT.getBoundingClientRect();return Math.max(0,Math.min(1,((e.touches?e.touches[0].clientX:e.clientX)-r.left)/r.width))}
+pT.addEventListener('mousedown',e=>{if(!audioBuf)return;isDrag=true;const p=pct(e);$('pFill').style.width=(p*100)+'%';$('tCur').textContent=fmt(p*dur)});
+pT.addEventListener('touchstart',e=>{if(!audioBuf)return;isDrag=true;const p=pct(e);$('pFill').style.width=(p*100)+'%'},{passive:true});
+addEventListener('mousemove',e=>{if(!isDrag)return;const p=pct(e);$('pFill').style.width=(p*100)+'%';$('tCur').textContent=fmt(p*dur)});
+addEventListener('touchmove',e=>{if(!isDrag)return;const p=pct(e);$('pFill').style.width=(p*100)+'%'},{passive:true});
+function onUp(e){if(!isDrag)return;isDrag=false;const cx2=e.changedTouches?e.changedTouches[0].clientX:e.clientX;const r=pT.getBoundingClientRect();seek(Math.max(0,Math.min(1,(cx2-r.left)/r.width))*dur)}
+addEventListener('mouseup',onUp);addEventListener('touchend',onUp);
+addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();togPlay()}if(e.code==='ArrowLeft')seek(curTime()-5);if(e.code==='ArrowRight')seek(curTime()+5)});
+
+// FX toggle binding
+const fxMap={pt:'fxPt',tr:'fxTr',bn:'fxBn',rgb:'fxRgb',te:'fxTe',ns:'fxNs',iv:'fxIv',rp:'fxRp',fm:'fxFm',fi:'fxFi',lt:'fxLt',rn:'fxRn',rb:'fxRb',wt:'fxWt',sd:'fxSd',cl:'fxCl'};
+for(const k in fxMap){
+  const el=$(fxMap[k]);
+  if(el)el.addEventListener('change',function(){FX[k]=this.checked?1:0});
+}
+$('fxGA').addEventListener('input',e=>FX.ga=parseInt(e.target.value));
+
+ptC.style.display='none';
+applyMode(0);
+animate();
+
+// ═══════════════════════════════════════
+// HAND GESTURE ENGINE (MediaPipe Hands)
+// ═══════════════════════════════════════
+let gestureMode=false,handsReady=false,camStream=null,handsInstance=null;
+let gestHint='',gestHintTimer=0;
+let gestSensitivity=5;
+let gestFrameId=null;
+let gestState={
+  palmOpen:false,fist:false,twoHands:false,prayHands:false,
+  swipeDir:null,swipeCooldown:0,
+  palmZ:0,lastPalmX:0,lastPalmY:0,
+  explodeForce:0,contractForce:0,
+  prayGlow:0,fullBurst:0,
+};
+let prevLandmarks=null,prevLandmarks2=null;
+let swipeAccumX=0,swipeAccumY=0;
+
+function showGestureHint(msg){
+  gestHint=msg;gestHintTimer=90;
+  const el=$('gestureHint');el.textContent=msg;el.classList.add('show');
+  console.log('[GESTURE]',msg);
+}
+
+$('gestSens').addEventListener('input',e=>{gestSensitivity=parseInt(e.target.value)});
+
+function loadScript(src){
+  return new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src=src;s.crossOrigin='anonymous';
+    s.onload=()=>{console.log('[GESTURE] Loaded:',src);resolve()};
+    s.onerror=e=>{console.error('[GESTURE] Failed to load:',src,e);reject(e)};
+    document.head.appendChild(s);
+  });
+}
+
+async function initGestureMode(){
+  if(gestureMode){
+    gestureMode=false;
+    $('bGest').classList.remove('active');
+    $('camWrap').classList.remove('visible');
+    $('gesturePanel').classList.remove('visible');
+    if(gestFrameId){cancelAnimationFrame(gestFrameId);gestFrameId=null}
+    if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}
+    showGestureHint('手势模式已关闭');
+    return;
+  }
+
+  // Check secure context
+  if(location.protocol==='file:'){
+    showGestureHint('请用本地服务器打开（file://不支持摄像头）');
+    console.error('[GESTURE] file:// protocol cannot access camera. Use: python3 -m http.server 8000');
+    alert('手势功能需要通过HTTP服务器访问。\n\n请在终端运行：\ncd '+location.pathname.replace(/\/[^/]+$/,'')+'\npython3 -m http.server 8000\n\n然后访问 http://localhost:8000');
+    return;
+  }
+
+  // Request camera FIRST (so user sees the permission prompt immediately)
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    showGestureHint('浏览器不支持摄像头API');
+    return;
+  }
+
+  try{
+    showGestureHint('正在请求摄像头权限...');
+    console.log('[GESTURE] Requesting camera...');
+    camStream=await navigator.mediaDevices.getUserMedia({
+      video:{width:{ideal:320},height:{ideal:240},facingMode:'user'},
+      audio:false
+    });
+    console.log('[GESTURE] Camera obtained, tracks:',camStream.getVideoTracks().length);
+  }catch(e){
+    console.error('[GESTURE] Camera error:',e.name,e.message);
+    if(e.name==='NotAllowedError')showGestureHint('摄像头权限被拒绝，请在浏览器设置中允许');
+    else if(e.name==='NotFoundError')showGestureHint('未找到摄像头设备');
+    else if(e.name==='NotReadableError')showGestureHint('摄像头被其他程序占用');
+    else showGestureHint('摄像头不可用: '+e.message);
+    return;
+  }
+
+  const video=$('camVideo');
+  video.srcObject=camStream;
+  await new Promise(r=>{video.onloadedmetadata=r});
+  try{await video.play()}catch(e){console.warn('[GESTURE] video.play():',e)}
+  console.log('[GESTURE] Video playing, size:',video.videoWidth,'x',video.videoHeight);
+
+  $('camWrap').classList.add('visible');
+  $('gesturePanel').classList.add('visible');
+  gestureMode=true;
+  $('bGest').classList.add('active');
+
+  if(handsReady){
+    showGestureHint('手势模式已开启');
+    startGestureLoop(video);
+    return;
+  }
+
+  // Load MediaPipe Hands
+  if(!window.Hands){
+    showGestureHint('正在加载手势识别模型...');
+    console.log('[GESTURE] Loading MediaPipe Hands JS...');
+    // Try multiple CDN sources
+    const cdnUrls=[
+      'https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js',
+      'https://unpkg.com/@mediapipe/hands/hands.js',
+    ];
+    let loaded=false;
+    for(const url of cdnUrls){
+      try{
+        await loadScript(url);
+        if(window.Hands){loaded=true;console.log('[GESTURE] Hands loaded from:',url);break}
+      }catch(e){console.warn('[GESTURE] CDN failed:',url,e)}
+    }
+    if(!loaded||!window.Hands){
+      console.error('[GESTURE] All CDN sources failed. window.Hands=',window.Hands);
+      showGestureHint('手势库加载失败，请检查网络连接');
+      gestureMode=false;$('bGest').classList.remove('active');
+      camStream.getTracks().forEach(t=>t.stop());camStream=null;
+      $('camWrap').classList.remove('visible');
+      return;
+    }
+  }
+
+  // Create Hands instance
+  try{
+    console.log('[GESTURE] Creating Hands instance...');
+    showGestureHint('正在初始化手势模型（首次约10秒）...');
+    // Determine CDN base for WASM/model files
+    const cdnBase='https://cdn.jsdelivr.net/npm/@mediapipe/hands/';
+    handsInstance=new window.Hands({
+      locateFile:f=>{console.log('[GESTURE] locateFile:',f);return cdnBase+f}
+    });
+    handsInstance.setOptions({
+      maxNumHands:2,
+      modelComplexity:0,
+      minDetectionConfidence:0.5,
+      minTrackingConfidence:0.4
+    });
+    handsInstance.onResults(onHandResults);
+
+    // Warm up: send the first frame to trigger WASM/model download
+    console.log('[GESTURE] Sending first frame to initialize model...');
+    await handsInstance.send({image:video});
+    console.log('[GESTURE] First frame processed, model ready');
+
+    handsReady=true;
+    showGestureHint('手势识别就绪 — 试试张开手掌');
+    startGestureLoop(video);
+  }catch(e){
+    console.error('[GESTURE] Hands init error:',e);
+    showGestureHint('手势模型加载失败: '+e.message);
+    gestureMode=false;
+    $('bGest').classList.remove('active');
+    camStream.getTracks().forEach(t=>t.stop());camStream=null;
+    $('camWrap').classList.remove('visible');
+  }
+}
+
+let gestBusy=false;
+function startGestureLoop(video){
+  async function tick(){
+    if(!gestureMode){gestFrameId=null;return}
+    if(!gestBusy&&video.readyState>=2){
+      gestBusy=true;
+      try{await handsInstance.send({image:video})}
+      catch(e){console.warn('[GESTURE] send error:',e)}
+      gestBusy=false;
+    }
+    gestFrameId=requestAnimationFrame(tick);
+  }
+  gestFrameId=requestAnimationFrame(tick);
+}
+
+function onHandResults(results){
+  if(!gestureMode)return;
+  const hs=results.multiHandLandmarks;
+  const sens=gestSensitivity/5;
+
+  if(!hs||hs.length===0){
+    gestState.palmOpen=false;gestState.fist=false;gestState.twoHands=false;gestState.prayHands=false;
+    gestState.explodeForce*=0.9;gestState.contractForce*=0.9;
+    gestState.fullBurst*=0.9;gestState.prayGlow*=0.92;
+    prevLandmarks=null;prevLandmarks2=null;
+    swipeAccumX*=0.8;swipeAccumY*=0.8;
+    return;
+  }
+
+  const h1=hs[0];
+  const h2=hs.length>1?hs[1]:null;
+
+  const fingers1=getFingerStates(h1);
+  const openCount1=fingers1.filter(f=>f).length;
+  const allOpen1=openCount1>=4;
+  const allClosed1=openCount1<=1;
+
+  const palmX=h1[0].x,palmY=h1[0].y,palmZRaw=h1[0].z;
+
+  // Two-hand gestures
+  if(h2){
+    const fingers2=getFingerStates(h2);
+    const openCount2=fingers2.filter(f=>f).length;
+    const allOpen2=openCount2>=4;
+
+    // Two hands open = full burst
+    if(allOpen1&&allOpen2){
+      gestState.twoHands=true;gestState.fullBurst=Math.min(gestState.fullBurst+0.15*sens,1);
+      if(gestState.fullBurst>0.5&&gestHintTimer<=0)showGestureHint('双手张开 — 全屏爆发');
+    }else{gestState.twoHands=false;gestState.fullBurst*=0.9}
+
+    // Prayer hands
+    const dist2=Math.abs(h1[0].x-h2[0].x)+Math.abs(h1[0].y-h2[0].y);
+    if(dist2<0.18&&openCount1>=3&&openCount2>=3){
+      gestState.prayHands=true;gestState.prayGlow=Math.min(gestState.prayGlow+0.1*sens,1);
+      if(gestState.prayGlow>0.3&&gestHintTimer<=0)showGestureHint('双手合十 — 祈祷');
+    }else{gestState.prayHands=false;gestState.prayGlow*=0.92}
+  }else{
+    gestState.twoHands=false;gestState.fullBurst*=0.9;
+    gestState.prayHands=false;gestState.prayGlow*=0.92;
+  }
+
+  // Single hand: open = explode, fist = contract
+  if(!h2&&allOpen1){
+    gestState.palmOpen=true;gestState.fist=false;
+    gestState.explodeForce=Math.min(gestState.explodeForce+0.12*sens,1);
+    gestState.contractForce*=0.85;
+    if(gestState.explodeForce>0.3&&gestHintTimer<=0)showGestureHint('掌开 — 特效扩散');
+  }else if(!h2&&allClosed1){
+    gestState.fist=true;gestState.palmOpen=false;
+    gestState.contractForce=Math.min(gestState.contractForce+0.12*sens,1);
+    gestState.explodeForce*=0.85;
+    if(gestState.contractForce>0.3&&gestHintTimer<=0)showGestureHint('握拳 — 粒子收缩');
+  }else{
+    gestState.palmOpen=false;gestState.fist=false;
+    gestState.explodeForce*=0.9;gestState.contractForce*=0.9;
+  }
+
+  gestState.palmZ=palmZRaw;
+
+  // Swipe detection
+  if(gestState.swipeCooldown>0)gestState.swipeCooldown--;
+  if(prevLandmarks&&gestState.swipeCooldown<=0){
+    const dx=(palmX-gestState.lastPalmX)*sens*3;
+    const dy=(palmY-gestState.lastPalmY)*sens*3;
+    swipeAccumX=swipeAccumX*0.7+dx;
+    swipeAccumY=swipeAccumY*0.7+dy;
+
+    if(Math.abs(swipeAccumX)>0.08&&Math.abs(swipeAccumX)>Math.abs(swipeAccumY)*1.5){
+      // Note: camera is mirrored, so swap direction
+      if(swipeAccumX<0){setMask(maskIdx+1);showGestureHint('右挥 — 换面具')}
+      else{setMask((maskIdx-1+MASKS.length)%MASKS.length);showGestureHint('左挥 — 换面具')}
+      gestState.swipeCooldown=30;swipeAccumX=0;swipeAccumY=0;
+    }
+    if(Math.abs(swipeAccumY)>0.08&&Math.abs(swipeAccumY)>Math.abs(swipeAccumX)*1.5){
+      if(swipeAccumY>0){applyMode((curMode+1)%MODES.length);showGestureHint('下挥 — '+MODES[curMode].name)}
+      else{applyMode((curMode-1+MODES.length)%MODES.length);showGestureHint('上挥 — '+MODES[curMode].name)}
+      gestState.swipeCooldown=30;swipeAccumX=0;swipeAccumY=0;
+    }
+  }
+
+  gestState.lastPalmX=palmX;gestState.lastPalmY=palmY;
+  prevLandmarks=h1;prevLandmarks2=h2;
+}
+
+function getFingerStates(lm){
+  const tips=[4,8,12,16,20];
+  const pips=[3,6,10,14,18];
+  const states=[];
+  for(let i=0;i<5;i++){
+    if(i===0){
+      states.push(Math.abs(lm[tips[i]].x-lm[2].x)>0.05);
+    }else{
+      states.push(lm[tips[i]].y<lm[pips[i]].y);
+    }
+  }
+  return states;
+}
+
+function applyGestureToParticles(){
+  if(!gestureMode)return;
+  const sens=gestSensitivity/5;
+
+  if(gestState.explodeForce>0.1){
+    for(const p of parts){
+      const cd=Math.sqrt((p.bx-SW/2)**2+(p.by-SH/2)**2)||1;
+      const f=gestState.explodeForce*20*sens;
+      p.vx+=(p.bx-SW/2)/cd*f*(.2+Math.random()*.3);
+      p.vy+=(p.by-SH/2)/cd*f*(.2+Math.random()*.3);
+    }
+  }
+
+  if(gestState.contractForce>0.1){
+    for(const p of parts){
+      const ddx=p.bx-p.x,ddy=p.by-p.y;
+      const f=gestState.contractForce*0.3*sens;
+      p.vx+=ddx*f;p.vy+=ddy*f;
+    }
+  }
+
+  if(gestState.fullBurst>0.3){
+    total=Math.max(total,gestState.fullBurst);
+    bass=Math.max(bass,gestState.fullBurst*0.8);
+    beat=true;
+  }
+
+  if(gestState.prayGlow>0.1){
+    const w3=innerWidth,h3=innerHeight,cx4=w3/2,cy4=h3*.4;
+    const grad3=fx.createRadialGradient(cx4,cy4,20,cx4,cy4,200+gestState.prayGlow*150);
+    grad3.addColorStop(0,`rgba(255,220,100,${gestState.prayGlow*0.4})`);
+    grad3.addColorStop(0.5,`rgba(201,168,76,${gestState.prayGlow*0.2})`);
+    grad3.addColorStop(1,'transparent');
+    fx.fillStyle=grad3;fx.fillRect(0,0,w3,h3);
+    if(gestState.prayGlow>0.5){FX.rn=1;total=Math.max(total,0.8)}
+  }
+
+  if(gestState.palmOpen||gestState.fist){
+    const depth=Math.max(0,Math.min(1,(-gestState.palmZ+0.05)*8*sens));
+    FX.ga=Math.round(20+depth*80);
+    $('fxGA').value=FX.ga;
+  }
+}
+
+$('bGest').addEventListener('click',initGestureMode);
+
+function updateGestureHint(){
+  if(gestHintTimer>0)gestHintTimer--;
+  else $('gestureHint').classList.remove('show');
+}
+
+// Hook gesture into main render pipeline
+const _origDrawVizFX=drawVizFX;
+drawVizFX=function(){
+  _origDrawVizFX();
+  if(gestureMode&&isCustom&&ptReady)applyGestureToParticles();
+  if(gestureMode&&!isCustom){
+    if(gestState.explodeForce>0.1){total=Math.max(total,gestState.explodeForce*0.8);bass=Math.max(bass,gestState.explodeForce*0.6);beat=gestState.explodeForce>0.3}
+    if(gestState.contractForce>0.1){total*=(1-gestState.contractForce*0.3)}
+    if(gestState.fullBurst>0.3){total=Math.max(total,gestState.fullBurst);bass=Math.max(bass,gestState.fullBurst*0.8);beat=true}
+    if(gestState.prayGlow>0.1){
+      const w4=innerWidth,h4=innerHeight,cx5=w4/2,cy5=h4*.4;
+      const grad4=fx.createRadialGradient(cx5,cy5,20,cx5,cy5,200+gestState.prayGlow*150);
+      grad4.addColorStop(0,`rgba(255,220,100,${gestState.prayGlow*0.4})`);
+      grad4.addColorStop(0.5,`rgba(201,168,76,${gestState.prayGlow*0.2})`);
+      grad4.addColorStop(1,'transparent');
+      fx.fillStyle=grad4;fx.fillRect(0,0,w4,h4);
+    }
+  }
+  updateGestureHint();
+};
+</script>
+</body>
+</html>
