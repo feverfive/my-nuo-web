@@ -120,6 +120,42 @@ input[type=file]{display:none}
 .mode-btn{font-family:'Ma Shan Zheng',cursive;font-size:.75rem;color:#665540;background:none;border:1px solid transparent;padding:2px 10px;cursor:pointer;border-radius:2px;transition:all .2s;white-space:nowrap}
 .mode-btn.active{color:var(--gold);border-color:rgba(200,160,60,.3);text-shadow:0 0 8px rgba(200,160,60,.3)}
 .mode-btn:hover{color:#998860}
+
+/* Pipeline panel — An Liya creative pipeline */
+#pipePanel{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;background:rgba(5,3,2,.88);backdrop-filter:blur(10px)}
+#pipePanel.visible{display:flex}
+.pp-box{width:min(94vw,940px);max-height:92vh;background:linear-gradient(180deg,rgba(20,14,10,.98),rgba(12,8,6,.98));border:1px solid rgba(200,160,60,.25);border-radius:8px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 0 60px rgba(180,40,40,.15)}
+.pp-head{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid rgba(200,160,60,.12);background:rgba(15,10,8,.6)}
+.pp-title{font-family:'Ma Shan Zheng',cursive;font-size:1.4rem;color:var(--gold);letter-spacing:.18em;text-shadow:0 0 18px rgba(200,160,60,.3)}
+.pp-sub{font-size:.55rem;color:#8b7740;letter-spacing:.18em;margin-top:2px}
+.pp-close{background:none;border:none;color:#665540;font-size:1.4rem;cursor:pointer;padding:0 6px}
+.pp-close:hover{color:var(--gold)}
+.pp-body{padding:14px 18px 18px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.pp-body::-webkit-scrollbar{width:5px}
+.pp-body::-webkit-scrollbar-thumb{background:rgba(200,160,60,.2);border-radius:3px}
+.pp-form{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;padding:10px 12px;background:rgba(20,14,10,.5);border:1px solid rgba(200,160,60,.08);border-radius:5px}
+.pp-form .full{grid-column:1/-1}
+.pp-form label{display:block;font-size:.55rem;color:#8b7740;letter-spacing:.12em;margin-bottom:3px}
+.pp-form input,.pp-form select,.pp-form textarea{width:100%;background:rgba(10,6,4,.7);border:1px solid rgba(200,160,60,.15);color:#d4c8a0;font-family:'Noto Serif SC',serif;font-size:.75rem;padding:5px 8px;border-radius:3px;outline:none;resize:vertical}
+.pp-form input:focus,.pp-form select:focus,.pp-form textarea:focus{border-color:var(--gold);box-shadow:0 0 8px rgba(200,160,60,.18)}
+.pp-form textarea{min-height:48px;line-height:1.5}
+.pp-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pp-btn{font-family:'Ma Shan Zheng',cursive;font-size:.85rem;letter-spacing:.12em;color:var(--gold);background:linear-gradient(135deg,rgba(200,160,60,.18),rgba(140,40,40,.15));border:1px solid rgba(200,160,60,.4);padding:5px 18px;cursor:pointer;border-radius:3px;transition:all .25s}
+.pp-btn:hover{background:linear-gradient(135deg,rgba(200,160,60,.3),rgba(180,40,40,.22));box-shadow:0 0 16px rgba(200,160,60,.25)}
+.pp-btn.ghost{background:none;font-family:'Noto Serif SC',serif;font-size:.7rem;border-color:rgba(200,160,60,.2);color:#998860;padding:4px 12px}
+.pp-btn.ghost:hover{color:var(--gold);border-color:rgba(200,160,60,.5)}
+.pp-stages{display:flex;flex-direction:column;gap:10px}
+.pp-stage{border:1px solid rgba(200,160,60,.12);border-radius:5px;background:rgba(15,10,8,.6);overflow:hidden}
+.pp-stage-h{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(25,18,12,.7);border-bottom:1px solid rgba(200,160,60,.08)}
+.pp-stage-h .pp-num{font-family:'Ma Shan Zheng',cursive;color:var(--gold);font-size:.95rem;letter-spacing:.2em;display:flex;align-items:center;gap:8px}
+.pp-stage-h .pp-num em{font-style:normal;font-size:.55rem;color:#665540;letter-spacing:.2em;font-family:'Noto Serif SC',serif}
+.pp-stage-h .pp-tools{display:flex;gap:6px}
+.pp-tool{background:none;border:1px solid rgba(200,160,60,.18);color:#998860;font-family:'Noto Serif SC',serif;font-size:.55rem;padding:2px 8px;cursor:pointer;border-radius:2px;letter-spacing:.1em;transition:all .2s}
+.pp-tool:hover{color:var(--gold);border-color:var(--gold)}
+.pp-tool.ok{color:var(--gold);border-color:var(--gold)}
+.pp-out{width:100%;background:rgba(8,5,4,.7);border:none;color:#d4c8a0;font-family:'Noto Serif SC',serif;font-size:.72rem;line-height:1.7;padding:10px 14px;outline:none;resize:vertical;min-height:60px;white-space:pre-wrap}
+.pp-out:focus{background:rgba(12,8,5,.85)}
+.pp-out::placeholder{color:#554430;font-style:italic}
 </style>
 </head>
 <body>
@@ -168,6 +204,95 @@ input[type=file]{display:none}
     <div class="rp-btns">
       <button class="rp-btn" id="rpDownload">下载录制</button>
       <button class="rp-btn" id="rpClose">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div id="pipePanel">
+  <div class="pp-box">
+    <div class="pp-head">
+      <div>
+        <div class="pp-title">安理雅 · 创作管道</div>
+        <div class="pp-sub">AN LIYA · CONCEPT → LYRICS → STYLE → STORYBOARD → COVER → COPY</div>
+      </div>
+      <button class="pp-close" id="ppClose">&times;</button>
+    </div>
+    <div class="pp-body">
+      <div class="pp-form">
+        <div class="full">
+          <label>核心主题 / TITLE</label>
+          <input id="ppTitle" type="text" value="傩夜" placeholder="例：傩夜 / 渡魂 / 招魂引">
+        </div>
+        <div>
+          <label>情绪基调 / MOOD</label>
+          <select id="ppMood">
+            <option value="通灵">通灵 — 阴翳、显形、低语</option>
+            <option value="神启">神启 — 降临、明耀、肃穆</option>
+            <option value="激越">激越 — 鼓点、奔涌、燎原</option>
+            <option value="悲悯">悲悯 — 苍茫、哀诉、怅望</option>
+            <option value="梦境">梦境 — 浮游、迷散、倒影</option>
+            <option value="法力">法力 — 镇压、铿锵、定形</option>
+          </select>
+        </div>
+        <div>
+          <label>风格倾向 / GENRE</label>
+          <select id="ppGenre">
+            <option value="ritual-electronic">傩唱·电子（Ritual-Electronic）</option>
+            <option value="folk-trip-hop">民谣·Trip-Hop</option>
+            <option value="dark-ambient">东方·暗潮 Dark Ambient</option>
+            <option value="industrial-drum">工业鼓·Industrial</option>
+            <option value="ethereal-pop">仙灵·Ethereal Pop</option>
+            <option value="cinematic">影像·Cinematic</option>
+          </select>
+        </div>
+        <div class="full">
+          <label>意象关键词（逗号分隔） / IMAGERY</label>
+          <input id="ppImg" type="text" value="面具,鼓声,血红月,符篆,松烟,夜雾,赤铜铃">
+        </div>
+        <div class="full">
+          <label>一句话概念（可留空，由系统自动生成） / LOGLINE</label>
+          <textarea id="ppLogline" placeholder="例：在傩夜的鼓点里，无名者借面具说出真名。"></textarea>
+        </div>
+        <div class="full pp-actions">
+          <button class="pp-btn" id="ppRun">生成全管道</button>
+          <button class="pp-btn ghost" id="ppExport">导出 Markdown</button>
+          <button class="pp-btn ghost" id="ppClear">清空</button>
+          <span style="font-size:.55rem;color:#665540;letter-spacing:.12em;margin-left:auto">每段可独立重生 · 文本可直接编辑</span>
+        </div>
+      </div>
+
+      <div class="pp-stages" id="ppStages">
+        <div class="pp-stage" data-st="concept">
+          <div class="pp-stage-h"><span class="pp-num">壹 · 概念<em>CONCEPT</em></span>
+            <div class="pp-tools"><button class="pp-tool" data-act="regen" data-st="concept">重生</button><button class="pp-tool" data-act="copy" data-st="concept">复制</button></div></div>
+          <textarea class="pp-out" id="ppOutConcept" placeholder="点击「生成全管道」开始..."></textarea>
+        </div>
+        <div class="pp-stage" data-st="lyrics">
+          <div class="pp-stage-h"><span class="pp-num">贰 · 歌词<em>LYRICS</em></span>
+            <div class="pp-tools"><button class="pp-tool" data-act="regen" data-st="lyrics">重生</button><button class="pp-tool" data-act="copy" data-st="lyrics">复制</button><button class="pp-tool" data-act="lrc" data-st="lyrics">载入播放器</button></div></div>
+          <textarea class="pp-out" id="ppOutLyrics" style="min-height:200px"></textarea>
+        </div>
+        <div class="pp-stage" data-st="style">
+          <div class="pp-stage-h"><span class="pp-num">叁 · 风格<em>STYLE SHEET</em></span>
+            <div class="pp-tools"><button class="pp-tool" data-act="regen" data-st="style">重生</button><button class="pp-tool" data-act="copy" data-st="style">复制</button></div></div>
+          <textarea class="pp-out" id="ppOutStyle" style="min-height:140px"></textarea>
+        </div>
+        <div class="pp-stage" data-st="storyboard">
+          <div class="pp-stage-h"><span class="pp-num">肆 · 分镜<em>STORYBOARD</em></span>
+            <div class="pp-tools"><button class="pp-tool" data-act="regen" data-st="storyboard">重生</button><button class="pp-tool" data-act="copy" data-st="storyboard">复制</button></div></div>
+          <textarea class="pp-out" id="ppOutBoard" style="min-height:200px"></textarea>
+        </div>
+        <div class="pp-stage" data-st="cover">
+          <div class="pp-stage-h"><span class="pp-num">伍 · 封面提示<em>COVER PROMPT</em></span>
+            <div class="pp-tools"><button class="pp-tool" data-act="regen" data-st="cover">重生</button><button class="pp-tool" data-act="copy" data-st="cover">复制</button></div></div>
+          <textarea class="pp-out" id="ppOutCover" style="min-height:120px"></textarea>
+        </div>
+        <div class="pp-stage" data-st="release">
+          <div class="pp-stage-h"><span class="pp-num">陆 · 发布文案<em>RELEASE COPY</em></span>
+            <div class="pp-tools"><button class="pp-tool" data-act="regen" data-st="release">重生</button><button class="pp-tool" data-act="copy" data-st="release">复制</button></div></div>
+          <textarea class="pp-out" id="ppOutRelease" style="min-height:180px"></textarea>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -230,6 +355,7 @@ input[type=file]{display:none}
       <button class="cb" onclick="$('lrcIn').click()">歌词</button>
       <input type="file" id="lrcIn" accept=".lrc,.txt">
       <button class="cb" id="bFx">特效</button>
+      <button class="cb" id="bPipe">管道</button>
       <button class="cb" id="bExport">截图</button>
       <button class="cb" id="bRec">录制</button>
       <button class="cb" id="bGest">手势</button>
@@ -1407,6 +1533,253 @@ function updateGestureHint(){
   if(gestHintTimer>0)gestHintTimer--;
   else $('gestureHint').classList.remove('show');
 }
+
+// ═══════════════════════════════════════
+// AN LIYA · CREATIVE PIPELINE
+// 概念 → 歌词 → 风格 → 分镜 → 封面 prompt → 发布文案
+// ═══════════════════════════════════════
+const PIPE_MOOD={
+  '通灵':{palette:'金黑赤·夜幕松烟',paletteEn:'gold-black-vermilion under pine smoke',bpm:[78,92],key:'D minor, dorian inflections',instr:['赤铜铃','傩鼓','低频 drone','气声合成','古琴揉弦','人声咒语切片'],refs:['林强《刺客聂隐娘》OST','FKA twigs · LP1','HAWS《荒原》'],vocal:'气声低唱起势，咒语化口白叠层，副歌切清亮真声',moodLineZh:'幽冥薄如纸，鼓点把名字写满夜空',moodLineEn:'Liminal whisper, vermilion under ash; the pulse spells names across the night.'},
+  '神启':{palette:'朱金白·铜光礼器',paletteEn:'cinnabar-gold-white over polished bronze',bpm:[88,104],key:'A minor → C major 抬升',instr:['编磬','颂钵','合成洞箫','落地鼓','童声合唱采样','管钟'],refs:['Lisa Gerrard','Hans Zimmer · Dune','谭盾《地图》'],vocal:'颂歌式长吟，副歌叠多层人声合唱，bridge 转独白',moodLineZh:'神在头顶落下，光把山门洗白',moodLineEn:'A descent of light: temples bleach white, the name is spoken from above.'},
+  '激越':{palette:'朱红墨黑·火星迸落',paletteEn:'crimson-ink-black with ember sparks',bpm:[120,138],key:'E phrygian',instr:['工业鼓','失真贝斯','锣与板鼓','锯齿合成','嗓音切片','金属噪声层'],refs:['UNKLE','Death Grips（克制版）','九宝乐队'],vocal:'半念半喊撕裂感，副歌四度跳跃，bridge 收成耳语',moodLineZh:'鼓点踢翻夜，火舌舔到月亮',moodLineEn:'Drums kick the night over; flame licks the moon’s rim.'},
+  '悲悯':{palette:'青灰雾蓝·骨白纸黄',paletteEn:'misty cyan with bone white and aged paper',bpm:[64,76],key:'G minor, suspended 2nds',instr:['二胡气音','大提琴','纸风琴','软合成 pad','远铃','纸张摩擦采样'],refs:['坂本龙一晚期','Sigur Rós','谭维维民谣端'],vocal:'气声吟起，副歌升至胸声，尾段近乎啜泣',moodLineZh:'我为陌生人哭，因为他们也曾是我',moodLineEn:'I weep for strangers — for I, too, was once any of them.'},
+  '梦境':{palette:'青烟月白·薄纱粉紫',paletteEn:'moonlit silver and gauze violet',bpm:[72,86],key:'B♭ lydian',instr:['空灵合成 pad','水滴音','拨弦古筝','回声鼓刷','倒放人声','迷雾混响'],refs:['Cocteau Twins','Beach House','龚琳娜实验端'],vocal:'飘忽假声为主，多层自我和声叠织',moodLineZh:'梦把我的名字念错，我也就答应了',moodLineEn:'The dream mispronounces my name, and still I answer.'},
+  '法力':{palette:'墨黑赤金·铸铁铭文',paletteEn:'iron black sealed with cinnabar',bpm:[96,112],key:'F# minor, modal pivots',instr:['法器铃','低音木鱼','合成镭射','侧链压缩鼓','金属敲击'],refs:['Massive Attack','花伦','王菀之实验端'],vocal:'平直念诵起势，副歌爆发真声，bridge 回到呼吸',moodLineZh:'符落在掌心，掌心落在天上',moodLineEn:'Sigil to palm, palm to heaven; the binding holds.'}
+};
+const PIPE_GENRE={
+  'ritual-electronic':'Ritual-Electronic · 傩唱电子',
+  'folk-trip-hop':'Folk × Trip-Hop · 民谣慢拍',
+  'dark-ambient':'East-Asian Dark Ambient · 东方暗潮',
+  'industrial-drum':'Industrial · 工业鼓机',
+  'ethereal-pop':'Ethereal Pop · 仙灵流行',
+  'cinematic':'Cinematic · 影像配乐'
+};
+let PIPE_RNG=Math.random;
+function pipeSeed(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0}PIPE_RNG=function(){h=Math.imul(h^(h>>>15),2246822507)>>>0;h=Math.imul(h^(h>>>13),3266489909)>>>0;return((h^(h>>>16))>>>0)/4294967296}}
+function pipePick(arr){return arr[Math.floor(PIPE_RNG()*arr.length)]}
+function pipeShuffle(arr){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(PIPE_RNG()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function pipeInputs(){
+  const title=($('ppTitle').value||'傩夜').trim();
+  const mood=$('ppMood').value;
+  const genre=$('ppGenre').value;
+  const imgRaw=($('ppImg').value||'面具,鼓声,夜').split(/[,，、\s]+/).map(s=>s.trim()).filter(Boolean);
+  const logline=($('ppLogline').value||'').trim();
+  return {title,mood,genre,imagery:imgRaw,logline};
+}
+
+// 1 · 概念
+function pipeConcept(I){
+  const m=PIPE_MOOD[I.mood];const g=PIPE_GENRE[I.genre];
+  const head=I.logline||`在「${I.title}」的鼓点里，无名者借${pipePick(I.imagery)||'面具'}说出真名；${m.moodLineZh}。`;
+  const audience=pipePick(['夜行的耳朵','在屏幕背后默念名字的人','给老去的传统重新点火的人','把仪式带进卧室的人']);
+  const stake=pipePick(['一次魂的归位','一次声音的祓除','一次身体重新长出脸','把禁忌写成情书']);
+  return [
+    `【LOGLINE】${head}`,
+    ``,
+    `【世界观】夜与仪式之间。${m.palette}的色温里，${pipeShuffle(I.imagery).slice(0,3).join('、')||'面具与鼓'}构成主舞台。声音不再是装饰，而是一次召唤。`,
+    `【核心命题】${stake}。`,
+    `【情绪曲线】静→蓄→破→渡→沉。前段含住，副歌一次性放开，bridge 翻面。`,
+    `【面向听众】${audience}。`,
+    `【一句话英文 logline】${m.moodLineEn} — for "${I.title}".`,
+    `【关键词】${I.title} · ${I.mood} · ${g} · ${pipeShuffle(I.imagery).slice(0,5).join(' / ')||'mask / drum'}`
+  ].join('\n');
+}
+
+// 2 · 歌词（带 [Section] 标签，可直接交给作曲）
+function pipeLyrics(I){
+  const img=I.imagery.length?I.imagery:['面具','鼓','月','烟','铃','符','夜雾','血'];
+  const m=PIPE_MOOD[I.mood];
+  const sh=()=>pipeShuffle(img);
+  const verseBank=[
+    s=>`夜把${s[0]}叠成纸，谁在背后写我`,
+    s=>`${s[0]}贴住脸，呼吸先认出了我`,
+    s=>`${s[0]}响一声，${s[1]}就抖落一层灰`,
+    s=>`${s[0]}从${s[1]}里抬头，看我把自己念错`,
+    s=>`我把名字寄存在${s[0]}里，${s[1]}替我答应`,
+    s=>`${s[0]}是借来的，${s[1]}也是，我把它们都还回去`,
+    s=>`${s[0]}劈开${s[1]}，里面坐着一个旧的我`,
+    s=>`${s[0]}知道我，${s[1]}却假装不认识`
+  ];
+  const preBank=[
+    s=>`一只手按住${s[0]}，另一只手把光放出来`,
+    s=>`鼓点数到三，${s[0]}就该落地`,
+    s=>`闭眼是我，睁眼是${s[0]}里的人`,
+    s=>`再唱一句，${s[0]}就肯交出名字`
+  ];
+  const bridgeBank=[
+    `——以下为念白——`,
+    `（低声）我不是来的，我是被叫来的；`,
+    `（低声）${m.moodLineZh}；`,
+    `（低声）请把脸还给我，名字可以再借一夜。`
+  ];
+  const outroBank=[
+    `${I.title}，${I.title}——`,
+    `把我念到天亮，再把我念回去。`
+  ];
+  const v1=[verseBank[0](sh()),verseBank[1](sh()),verseBank[2](sh()),verseBank[3](sh())];
+  const v2=[verseBank[4](sh()),verseBank[5](sh()),verseBank[6](sh()),verseBank[7](sh())];
+  const pc=[preBank[0](sh()),preBank[1](sh())];
+  const pc2=[preBank[2](sh()),preBank[3](sh())];
+  const ch=[`${I.title}——把我念出来`,`${I.title}——把我送过去`,`鼓不停，我就还在`,`${I.title}——`];
+  return [
+    `[Intro · 念白]`,
+    `（${I.logline||m.moodLineZh}）`,
+    ``,`[Verse 1]`,...v1,
+    ``,`[Pre-Chorus]`,...pc,
+    ``,`[Chorus]`,...ch,
+    ``,`[Verse 2]`,...v2,
+    ``,`[Pre-Chorus 2]`,...pc2,
+    ``,`[Bridge]`,...bridgeBank,
+    ``,`[Chorus · reprise]`,...ch,
+    ``,`[Outro]`,...outroBank
+  ].join('\n');
+}
+
+// 3 · 风格表
+function pipeStyle(I){
+  const m=PIPE_MOOD[I.mood];const g=PIPE_GENRE[I.genre];
+  const bpm=Math.round(m.bpm[0]+PIPE_RNG()*(m.bpm[1]-m.bpm[0]));
+  const instr=pipeShuffle(m.instr).slice(0,5).join('、');
+  const refs=m.refs.join(' / ');
+  return [
+    `【流派】${g}（${I.mood}基底）`,
+    `【BPM】${bpm}（容许 ±4 弹性，副歌可推到 ${bpm+4}）`,
+    `【调式】${m.key}`,
+    `【结构】Intro 8 — V1 16 — PC 8 — Chorus 16 — V2 16 — PC 8 — Chorus 16 — Bridge 12 — Chorus 16 — Outro 8（共约 3'40"）`,
+    `【乐器层】${instr}`,
+    `【人声方向】${m.vocal}`,
+    `【混音笔记】低频留 60–90Hz 的鼓胸腔；人声前置但不亮顶；副歌侧链压缩 4–6dB，让鼓“呼吸”穿过人声；bridge 砍掉低频做空档`,
+    `【母带方向】RMS -10 ~ -9，留 2dB 顶峰头空间；流媒体目标 -14 LUFS`,
+    `【参考曲目】${refs}`,
+    `【色彩词】${m.palette} / ${m.paletteEn}`
+  ].join('\n');
+}
+
+// 4 · 分镜（六场）
+function pipeStoryboard(I){
+  const m=PIPE_MOOD[I.mood];const img=I.imagery.length?I.imagery:['面具','鼓','月'];
+  const sh=()=>pipeShuffle(img);
+  const cams=['极特写','低角广角','轨道横移','顶光俯拍','手持跟随','慢门长曝'];
+  const cs=pipeShuffle(cams);
+  const scenes=[
+    {t:'00:00–00:18',name:'起 · 暗场',act:`镜头从纯黑里浮出${sh()[0]}的轮廓，呼吸声先于鼓出现`,light:'仅一束顶光，色温 2700K',cam:cs[0]},
+    {t:'00:18–00:50',name:'承 · 入场',act:`安理雅背身入画，${sh()[0]}贴在掌心，${sh()[1]}从画外滚入`,light:`${m.palette.split('·')[0]}的混合实景灯`,cam:cs[1]},
+    {t:'00:50–01:18',name:'蓄 · 抬眼',act:`第一次面向镜头，眼神挑起的同时鼓点入网，${sh()[0]}在身后散开`,light:'侧逆光 + 烟雾',cam:cs[2]},
+    {t:'01:18–01:55',name:'破 · 副歌',act:`空间被打开：群舞或多重镜像的「她」同时起舞，${sh()[0]}与${sh()[1]}漫天炸开`,light:'频闪 + 红蓝双向',cam:cs[3]},
+    {t:'01:55–02:30',name:'渡 · 桥段',act:`时间放慢，安理雅独自把${sh()[0]}解下，露出真脸；念白叠在画面上`,light:'单点暖光，背景压黑',cam:cs[4]},
+    {t:'02:30–03:40',name:'沉 · 收',act:`镜头退远，${I.title}二字以朱砂落款形式压在画面右下，余烟未散`,light:'黎明青蓝 + 一抹金',cam:cs[5]}
+  ];
+  return scenes.map((s,i)=>`场${i+1} · ${s.name}  [${s.t}]\n  动作：${s.act}\n  灯光：${s.light}\n  镜头：${s.cam}`).join('\n\n');
+}
+
+// 5 · 封面 prompt
+function pipeCover(I){
+  const m=PIPE_MOOD[I.mood];const g=PIPE_GENRE[I.genre];
+  const subjects=pipeShuffle(I.imagery.length?I.imagery:['面具','鼓','血红月']).slice(0,3).join(', ');
+  const stylish=pipePick(['ink-wash texture meets cinematic still','painterly chiaroscuro','silver-halide film grain','wet-plate collodion feel','Beijing-opera meets cyber-shrine']);
+  const composition=pipePick(['centered portrait, slight low angle','rule-of-thirds with negative space at top','fully symmetric ritual frame','close-up off-center, shallow DOF']);
+  const negative='no text, no watermark, no logo, no extra fingers, no plastic skin, no over-saturation, no cartoon';
+  return [
+    `【Prompt】An Liya — "${I.title}", ${m.paletteEn}, ${subjects}, traditional Chinese Nuo-mask aesthetic fused with ${g.split(' · ')[0]}, ${stylish}, ${composition}, volumetric incense smoke, fine surface detail, ultra-detailed eyes through the mask slit, high dynamic range, 35mm cinematic lens, shot on Arri Alexa, color-graded ${m.paletteEn.replace(/,.*$/,'')}, mood: ${I.mood}.`,
+    ``,
+    `【Negative】${negative}`,
+    ``,
+    `【Params】--ar 1:1 --style raw --stylize 250 --v 6  (Midjourney)  ·  Stable Diffusion: 35 steps, CFG 6, sampler DPM++ 2M Karras, 1024×1024`,
+    `【备选构图】方形封面（专辑） / 9:16（Reels & 抖音封面） / 16:9（YouTube 横版） / 1:1 头像版（去掉烟雾，保留面具特写）`
+  ].join('\n');
+}
+
+// 6 · 发布文案
+function pipeRelease(I){
+  const m=PIPE_MOOD[I.mood];const g=PIPE_GENRE[I.genre];
+  const tags=['#安理雅','#'+I.title,'#傩舞声浪','#'+I.mood,'#NuoDance','#AnLiya','#RitualPop','#新单曲'].join(' ');
+  return [
+    `— 微博 / X —`,
+    `安理雅 新单曲《${I.title}》｜${m.moodLineZh}。`,
+    `${g}，${PIPE_MOOD[I.mood].bpm[0]}–${PIPE_MOOD[I.mood].bpm[1]} BPM 的夜行节奏。`,
+    `「${I.logline||m.moodLineZh}」`,
+    `▎全平台上线（待填发布日期）。${tags}`,
+    ``,
+    `— 小红书 / 抖音 —`,
+    `这一次我把脸借了出去 🪬`,
+    `安理雅《${I.title}》｜傩面之下的真名`,
+    `· ${m.moodLineZh}`,
+    `· ${g}，${pipePick(['听完不敢回头','请戴耳机服用','从第二遍开始才显形'])}`,
+    `· 封面与 MV 同步，故事在评论区`,
+    `${tags}`,
+    ``,
+    `— Instagram / English —`,
+    `An Liya — "${I.title}" (single).`,
+    `${m.moodLineEn}`,
+    `A ${g.split(' · ')[0].toLowerCase()} piece at ${PIPE_MOOD[I.mood].bpm[0]}–${PIPE_MOOD[I.mood].bpm[1]} BPM. Out everywhere — date soon.`,
+    `${tags}`,
+    ``,
+    `— 流媒体 bio（120 字内）—`,
+    `安理雅 / An Liya · 把傩面、鼓声与夜带进电子乐的歌者。新作《${I.title}》以${I.mood}为骨，用${pipeShuffle(I.imagery).slice(0,2).join('与')||'面具与鼓'}写一封献给夜的情书。`
+  ].join('\n');
+}
+
+const PIPE_FNS={concept:pipeConcept,lyrics:pipeLyrics,style:pipeStyle,storyboard:pipeStoryboard,cover:pipeCover,release:pipeRelease};
+const PIPE_OUT={concept:'ppOutConcept',lyrics:'ppOutLyrics',style:'ppOutStyle',storyboard:'ppOutBoard',cover:'ppOutCover',release:'ppOutRelease'};
+
+function pipeRunOne(stage){
+  const I=pipeInputs();
+  pipeSeed(stage+'·'+I.title+'·'+I.mood+'·'+Date.now());
+  $(PIPE_OUT[stage]).value=PIPE_FNS[stage](I);
+}
+function pipeRunAll(){
+  const I=pipeInputs();
+  const baseSeed=I.title+'·'+I.mood+'·'+Date.now();
+  for(const k of Object.keys(PIPE_FNS)){pipeSeed(k+'·'+baseSeed);$(PIPE_OUT[k]).value=PIPE_FNS[k](I)}
+}
+function pipeCopy(stage){
+  const v=$(PIPE_OUT[stage]).value;if(!v)return;
+  navigator.clipboard.writeText(v).then(()=>{
+    const btn=document.querySelector(`.pp-tool[data-act="copy"][data-st="${stage}"]`);
+    if(!btn)return;const orig=btn.textContent;btn.textContent='已复制';btn.classList.add('ok');
+    setTimeout(()=>{btn.textContent=orig;btn.classList.remove('ok')},1200);
+  });
+}
+function pipeExport(){
+  const I=pipeInputs();const out={};for(const k of Object.keys(PIPE_OUT))out[k]=$(PIPE_OUT[k]).value||'(未生成)';
+  const md=[`# 安理雅《${I.title}》· 创作管道`,``,`> ${I.logline||PIPE_MOOD[I.mood].moodLineZh}`,``,
+    `## 壹 · 概念`,out.concept,``,`## 贰 · 歌词`,out.lyrics,``,
+    `## 叁 · 风格`,out.style,``,`## 肆 · 分镜`,out.storyboard,``,
+    `## 伍 · 封面 Prompt`,out.cover,``,`## 陆 · 发布文案`,out.release,``,
+    `---`,`生成时间：${new Date().toLocaleString('zh-CN')}`].join('\n');
+  const blob=new Blob([md],{type:'text/markdown;charset=utf-8'});const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=`AnLiya_${I.title}_pipeline.md`;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+function pipeClear(){for(const k of Object.keys(PIPE_OUT))$(PIPE_OUT[k]).value=''}
+function pipeLoadIntoPlayer(){
+  const txt=$('ppOutLyrics').value;if(!txt)return;
+  // Strip section headers and parens, then synthesize timestamps every 4s starting at 2s.
+  const lines=txt.split('\n').map(s=>s.trim()).filter(s=>s&&!/^\[.+\]$/.test(s));
+  let lrc='';let t=2;for(const ln of lines){const mm=String(Math.floor(t/60)).padStart(2,'0');const ss=String(Math.floor(t%60)).padStart(2,'0');lrc+=`[${mm}:${ss}.00]${ln}\n`;t+=4}
+  parseLRC(lrc);
+  const btn=document.querySelector('.pp-tool[data-act="lrc"]');if(btn){const o=btn.textContent;btn.textContent='已载入';btn.classList.add('ok');setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok')},1200)}
+}
+
+$('bPipe').addEventListener('click',()=>{
+  $('pipePanel').classList.add('visible');
+  // Pre-fill empty stages with a soft hint of inputs by running once if all empty.
+  const empty=Object.values(PIPE_OUT).every(id=>!$(id).value);
+  if(empty)pipeRunAll();
+});
+$('ppClose').addEventListener('click',()=>$('pipePanel').classList.remove('visible'));
+$('pipePanel').addEventListener('click',e=>{if(e.target.id==='pipePanel')$('pipePanel').classList.remove('visible')});
+$('ppRun').addEventListener('click',pipeRunAll);
+$('ppExport').addEventListener('click',pipeExport);
+$('ppClear').addEventListener('click',pipeClear);
+$('ppStages').addEventListener('click',e=>{
+  const b=e.target.closest('.pp-tool');if(!b)return;
+  const act=b.dataset.act,st=b.dataset.st;
+  if(act==='regen')pipeRunOne(st);
+  else if(act==='copy')pipeCopy(st);
+  else if(act==='lrc')pipeLoadIntoPlayer();
+});
 
 // Hook gesture into main render pipeline
 const _origDrawVizFX=drawVizFX;
